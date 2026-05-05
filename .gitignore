@@ -1,0 +1,24 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# data and outputs
+data/images/*
+!data/images/.gitkeep
+results/
+*.pt
+*.onnx
+*.engine
+
+# editor / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# downloaded weights
+yolov8*.pt
+*.safetensors
