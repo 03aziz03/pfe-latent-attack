@@ -1,0 +1,41 @@
+# ----------------------------------------------------------------------------
+# Default configuration for the object-aware latent adversarial attack.
+# All values can be overridden from the command line, e.g.
+#   python scripts/run_attack.py --config configs/default.yaml --eps_z 0.15
+# ----------------------------------------------------------------------------
+
+# ---- detector ----
+detector:
+  weights: "runs/yolov8n_detrac/best.pt"      # downloaded by ultralytics on first use
+  conf_thr: 0.25             # confidence threshold used to build D_clean
+  iou_nms: 0.45              # NMS IoU threshold (only used for D_clean / eval)
+  imgsz: 640                 # YOLOv8 input size
+
+# ---- VAE ----
+vae:
+  model_id: "stabilityai/sd-vae-ft-mse"
+  scale: 0.18215             # standard SD latent scaling factor
+
+# ---- attack ----
+attack:
+  eps_z: 0.10                # L-infinity budget on latent perturbation
+  gamma: 0.05                # confidence floor in the vanishing loss
+  lambda_p: 0.05             # weight of masked L2 perceptual loss
+  lambda_r: 1.0e-3           # weight of latent-magnitude regularizer
+  lr: 0.01                   # Adam learning rate
+  num_steps: 80              # optimization steps
+  early_stop: true           # stop early if all p_c < gamma
+  early_stop_margin: 0.0     # require p_c < gamma - margin to stop
+
+# ---- baselines (pixel-space) ----
+baselines:
+  eps_pixel: 0.0314          # ~ 8/255, standard L-inf budget for pixel attacks
+  pgd_steps: 50
+  pgd_alpha: 0.00392         # ~ 1/255 step size
+  mask_restricted: true      # whether to restrict pixel PGD to bounding boxes
+
+# ---- runtime ----
+runtime:
+  device: "cuda"              # "cuda" or "cpu" (cpu only viable for sanity check)
+  dtype: "float32"           # SD VAE is more stable in float32
+  seed: 0

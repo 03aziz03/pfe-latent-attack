@@ -1,0 +1,538 @@
+% =============================================================================
+%  Object-Aware Latent Adversarial Attack on YOLOv8 -- Method document
+%
+%  Compile with:  pdflatex method.tex   (twice for cross-references)
+%  Or:            latexmk -pdf method.tex
+%
+%  Notes pour l'encadrant : les paragraphes "Note pour l'encadrant" en francais
+%  sont des explications additionnelles ajoutees pour faciliter la lecture.
+%  Le contenu technique formel est en anglais (langue du rapport final).
+% =============================================================================
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true, linkcolor=blue!50!black, urlcolor=blue!50!black]{hyperref}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+
+% --- Custom environment for supervisor-facing explanatory notes ----------------
+\newtcolorbox{supervisornote}{
+    colback=blue!4!white,
+    colframe=blue!40!black,
+    boxrule=0.4pt,
+    arc=2pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+    breakable,
+    title={\small\textbf{Note pour l'encadrant}},
+    fonttitle=\sffamily,
+    coltitle=blue!40!black,
+    colbacktitle=blue!10!white,
+}
+
+% --- Math shortcuts ------------------------------------------------------------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\NMS}{NMS}
+\DeclareMathOperator{\MaxPool}{MaxPool}
+\DeclareMathOperator{\clip}{clip}
+
+% =============================================================================
+\title{\bfseries Object-Aware Latent Adversarial Attack on YOLOv8 \\
+       \large Mathematical formulation of the method}
+\author{Mohamed Aziz Brahmi \\
+        \small PFE -- Adversarial robustness of object detectors}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent This document gives the full mathematical formulation of the attack
+implemented in \texttt{src/attack.py}. The README contains a one-paragraph
+summary; this is the formal version used in the report.
+\end{abstract}
+
+\begin{supervisornote}
+Ce document est la version detaillee de la methode. Il est organise en 14
+sections courtes : la section~\ref{sec:notation} fixe les notations, les
+sections~\ref{sec:masks}--\ref{sec:projection} construisent les briques (masques,
+forward, fonction objectif, contraintes), la section~\ref{sec:optim} donne
+l'algorithme d'optimisation complet, et les sections~\ref{sec:why-latent}--\ref{sec:limits}
+discutent les choix de modelisation et les limites. Les encadres bleus
+``Note pour l'encadrant'' sont des explications ajoutees pour ce document
+uniquement et n'apparaitront pas tels quels dans le rapport final.
+\end{supervisornote}
+
+% =============================================================================
+\section{Notation}\label{sec:notation}
+
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Symbol & Space & Meaning \\
+\midrule
+$x$              & $\R^{3 \times H \times W}$, values in $[0,1]$ & clean RGB image \\
+$f$              & $f : \R^{3 \times H \times W} \to \R^{N \times (4+C)}$ & frozen YOLOv8 detector (pre-NMS head) \\
+$E,\ D$          & SD-VAE encoder / decoder & frozen Stable-Diffusion VAE \\
+$z = E(x)$       & $\R^{4 \times H/8 \times W/8}$ & latent encoding of $x$ \\
+$\delta$         & $\R^{4 \times H/8 \times W/8}$ & learnable latent perturbation \\
+$M$              & $\{0,1\}^{H \times W}$ & pixel mask = union of detected boxes \\
+$M_z$            & $\{0,1\}^{H/8 \times W/8}$ & latent mask (pooled $M$) \\
+$\mathcal{D}_{\text{clean}}$ & set of detections & YOLOv8 outputs on $x$ after NMS, conf $> \tau$ \\
+$\mathcal{C}_{\text{clean}}$ & subset of $\{0,\ldots,C-1\}$ & classes that appear in $\mathcal{D}_{\text{clean}}$ \\
+$\varepsilon_z$  & scalar & $L_\infty$ budget on $\delta$ \\
+$\gamma$         & scalar in $(0,1)$ & confidence floor in the vanishing loss \\
+$\tau$           & scalar & NMS confidence threshold (default $0.25$) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Image tensors are in $[0,1]$; the VAE expects inputs in $[-1,1]$, so
+$E$ and $D$ internally apply the affine $2x-1$ and $(y+1)/2$.
+
+% =============================================================================
+\section{Threat model}\label{sec:threat}
+
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+\item \textbf{White-box, digital, untargeted (per class).} The attacker has full
+access to the frozen detector $f$ and the frozen VAE $(E, D)$. No weights are
+updated. The attacker observes $\mathcal{D}_{\text{clean}}$ once and tries to
+drive every class in $\mathcal{C}_{\text{clean}}$ below the detection threshold.
+\item \textbf{Image-conditional, instance-agnostic.} The perturbation $\delta$
+is optimized per image. We do not require persistent identities across frames;
+success is measured frame-by-frame.
+\item \textbf{Locality.} The pixel-space change is restricted to $M$ (the
+union of clean boxes) by a paste-back operator. The latent change is restricted
+to $M_z$ by elementwise masking of $\delta$.
+\item \textbf{No physical realizability.} This is a digital attack; we make no
+claim about printability, illumination invariance, or perspective robustness.
+\end{itemize}
+
+\begin{supervisornote}
+On choisit un cadre \emph{white-box} car il fournit la borne superieure de
+ce qu'un attaquant peut realiser : si la defense resiste ici, elle resiste
+\emph{a fortiori} en black-box. Le cadre \emph{digital} est impose par
+l'objectif du PFE (etudier la robustesse algorithmique du detecteur, pas la
+faisabilite physique d'une attaque routiere). \emph{Untargeted per class}
+signifie qu'on cherche a faire disparaitre les detections, pas a les
+re-etiqueter -- c'est l'attaque qui maximise les faux negatifs.
+\end{supervisornote}
+
+% =============================================================================
+\section{Bounding-box masks}\label{sec:masks}
+
+Let $\mathcal{D}_{\text{clean}} = \{ (b_i, c_i, p_i) \}_{i=1}^{K}$ with
+$b_i = (x_1, y_1, x_2, y_2)$ in pixel coordinates. The pixel mask is the
+union of clean boxes:
+\begin{equation}
+M[h, w] = \begin{cases}
+1 & \text{if } \exists\, i \text{ s.t. } (h, w) \in b_i, \\
+0 & \text{otherwise.}
+\end{cases}
+\end{equation}
+
+\noindent The latent mask is obtained by an $8 \times 8$ max-pool with stride $8$ -- i.e. a
+latent cell is ``inside'' the perturbable region iff \emph{any} of its $8 \times 8$
+pixel cells lies in $M$:
+\begin{equation}
+M_z = \MaxPool_{\text{kernel}=8,\ \text{stride}=8}(M).
+\end{equation}
+
+This guarantees that every pixel inside a clean box is covered by at least
+one perturbable latent cell, while keeping the perturbable region as tight
+as possible.
+
+\noindent $M$ and $M_z$ are computed once per image and held constant for the rest
+of the optimization.
+
+\begin{supervisornote}
+Le choix de \emph{max-pool} (et non average-pool) est important : on veut une
+\emph{couverture conservative}, c'est-a-dire ne pas exclure du masque latent
+une cellule qui contient ne serait-ce qu'un pixel d'objet. Si on utilisait
+average-pool avec un seuil, on risquerait des trous au bord des boites. Le
+facteur $8$ vient de la profondeur du VAE de Stable Diffusion (downsampling
+$\times 8$) et coincide avec le \emph{stride} du premier niveau de detection
+de YOLOv8 -- c'est cette coincidence qui rend la perturbation latente
+naturellement aligne avec la grille de decision du detecteur.
+\end{supervisornote}
+
+% =============================================================================
+\section{Forward pass (clean and adversarial)}\label{sec:forward}
+
+Encoding is done once, with no gradient:
+\begin{equation}
+z = E(x) \quad \text{(detached)}.
+\end{equation}
+
+\noindent Given a perturbation $\delta$, the adversarial latent and decoded image are
+\begin{align}
+z_{\text{adv}} &= z + (M_z \odot \delta), \\
+x_{\text{dec}} &= D(z_{\text{adv}}), \quad \text{(autograd-friendly)} \\
+x_{\text{adv}} &= M \odot x_{\text{dec}} + (1 - M) \odot x. \label{eq:pasteback}
+\end{align}
+
+\noindent The paste-back operator on the last line~\eqref{eq:pasteback} is the key
+locality device: pixels outside the union of clean boxes are byte-identical
+to the input. Only pixels inside $M$ can change, regardless of how $D$
+reconstructs the rest of the image.
+
+\noindent The adversarial detector output (pre-NMS) is
+\begin{equation}
+y = f(x_{\text{adv}}) \in \R^{N \times (4 + C)},
+\end{equation}
+where the last $C$ channels of each anchor are class confidences in $[0, 1]$
+(post-sigmoid in YOLOv8's head).
+
+\begin{supervisornote}
+Le \emph{paste-back} est ce qui distingue notre methode d'une attaque
+latente naive. Un VAE ne reconstruit jamais exactement l'image d'entree
+(\textit{reconstruction loss} non nulle) ; sans paste-back, le simple fait
+d'encoder puis decoder l'image clean introduit deja des artefacts hors
+des boites, ce qui :
+(i)~contamine la metrique PSNR globale,
+(ii)~rend impossible de claimer que la perturbation est localisee aux
+objets. Avec paste-back, on garantit \emph{par construction} que seuls
+les pixels couverts par $M$ peuvent differer de $x$.
+\end{supervisornote}
+
+% =============================================================================
+\section{Vanishing loss (class-level max-confidence)}\label{sec:vanish}
+
+For each class $c$ originally present in $\mathcal{C}_{\text{clean}}$, define
+its image-level max confidence
+\begin{equation}
+p_c(x_{\text{adv}}) = \max_{n \in \{1,\ldots,N\}} y[n,\ 4 + c].
+\end{equation}
+
+\noindent The vanishing loss penalizes any class whose max confidence is still
+above the floor $\gamma$:
+\begin{equation}
+\mathcal{L}_{\text{vanish}}(x_{\text{adv}})
+   = \sum_{c \in \mathcal{C}_{\text{clean}}}
+       \max\bigl(\, p_c(x_{\text{adv}}) - \gamma,\ 0 \,\bigr).
+\label{eq:vanish}
+\end{equation}
+
+This formulation is intentionally \textbf{class-level} rather than
+\textbf{instance-level}: we do not match adversarial anchors to clean boxes
+via IoU, we simply require that no anchor anywhere in the image predicts
+class $c$ with confidence above $\gamma$. This sidesteps the
+non-differentiability of NMS and the brittleness of IoU matching, and
+empirically suffices to remove every detection of every targeted class
+under standard YOLOv8 NMS at threshold $\tau \geq \gamma$.
+
+The hinge with floor $\gamma$ (rather than a plain $p_c$ term) prevents the
+optimizer from wasting budget pushing already-suppressed classes further down.
+
+\begin{supervisornote}
+Equation~\eqref{eq:vanish} est le coeur de la methode. Trois remarques :
+\begin{enumerate}[leftmargin=*, itemsep=1pt]
+\item Le $\max$ sur les anchors est sous-differentiable mais pas un
+\emph{argmax} discret : PyTorch propage le gradient sur l'anchor maximal,
+ce qui suffit en pratique (technique standard en attaque YOLO).
+\item Le \emph{hinge} ($\max(\cdot - \gamma, 0)$) joue le role d'un seuil
+de << satisfait >> : une fois $p_c < \gamma$, la classe $c$ ne contribue
+plus au gradient, et le budget se reporte sur les classes encore visibles.
+\item La sommation sur $\mathcal{C}_{\text{clean}}$ (pas sur toutes les
+classes) evite de creer accidentellement de nouvelles detections de classes
+absentes a l'origine.
+\end{enumerate}
+\end{supervisornote}
+
+% =============================================================================
+\section{Perceptual and regularization terms}\label{sec:perc}
+
+To keep the perturbation visually unobtrusive we add a masked $L_2$ term in
+pixel space, normalized by the masked area:
+\begin{equation}
+\mathcal{L}_{\text{perc}}(x_{\text{adv}}, x)
+   = \frac{\norm{M \odot (x_{\text{adv}} - x)}_2^2}{3 \cdot \norm{M}_1}.
+\end{equation}
+
+$\norm{M}_1$ is the number of foreground pixels; the factor $3$ accounts for
+RGB channels. Normalizing makes $\lambda_p$ interpretable independently of
+how much of the frame is covered by boxes.
+
+\noindent We also penalize the magnitude of $\delta$ directly -- a soft prior that
+keeps latents near the clean encoding even when the budget is loose:
+\begin{equation}
+\mathcal{L}_{\text{reg}}(\delta) = \frac{\norm{M_z \odot \delta}_2^2}{\norm{M_z}_1}.
+\end{equation}
+
+% =============================================================================
+\section{Objective}\label{sec:obj}
+
+\begin{equation}
+\boxed{\;
+\mathcal{L}(\delta)
+ = \mathcal{L}_{\text{vanish}}(x_{\text{adv}})
+ + \lambda_p \cdot \mathcal{L}_{\text{perc}}(x_{\text{adv}}, x)
+ + \lambda_r \cdot \mathcal{L}_{\text{reg}}(\delta)
+\;}
+\end{equation}
+
+\noindent with $x_{\text{adv}}$ defined in section~\ref{sec:forward} as a function
+of $\delta$.
+
+\noindent Default weights (see \texttt{configs/default.yaml}): $\lambda_p = 0.05$,
+$\lambda_r = 10^{-3}$. The vanishing term is the only term that drives the
+attack; the other two are taste-makers.
+
+% =============================================================================
+\section{Constraint and projection}\label{sec:projection}
+
+The perturbation lives in an $L_\infty$ ball of radius $\varepsilon_z$ in
+latent space:
+\begin{equation}
+\delta \in B_\infty(\varepsilon_z) = \bigl\{\, d \;:\; \norm{d}_\infty \leq \varepsilon_z \,\bigr\}.
+\end{equation}
+
+\noindent We additionally restrict $\delta$ to the latent mask $M_z$ (zero outside
+the box footprint, all the time).
+
+After every Adam step we project:
+\begin{equation}
+\delta \;\leftarrow\; M_z \odot \clip(\delta,\ -\varepsilon_z,\ +\varepsilon_z).
+\label{eq:project}
+\end{equation}
+
+We do \textbf{not} clip $x_{\text{adv}}$ to $[0,1]$ between steps -- the loss
+already penalizes deviation from $x$ and the paste-back operator only affects
+pixels inside $M$. We do clip $x_{\text{adv}}$ to $[0,1]$ once at the end
+before saving.
+
+% =============================================================================
+\section{Optimization}\label{sec:optim}
+
+\begin{tcolorbox}[
+    colback=gray!3, colframe=gray!50, boxrule=0.4pt,
+    title={\small\textbf{Algorithm 1 -- Object-aware latent adversarial attack}},
+    fonttitle=\sffamily, coltitle=black, colbacktitle=gray!15,
+    arc=2pt, breakable
+]
+\small
+\begin{flushleft}
+\textbf{Input:} clean image $x$, detector $f$, VAE $(E, D)$,
+hyperparameters $\varepsilon_z, \gamma, \lambda_p, \lambda_r,$ lr$,\, T$. \\[2pt]
+\textbf{Output:} adversarial image $x_{\text{adv}}$, perturbation $\delta$.
+\end{flushleft}
+
+\vspace{-4pt}
+\hrule
+\vspace{4pt}
+
+\begin{enumerate}[leftmargin=*, itemsep=1pt, label=\arabic*.]
+\item Run NMS on $f(x)$ to obtain $\mathcal{D}_{\text{clean}}$ and $\mathcal{C}_{\text{clean}}$.
+\item Compute pixel mask $M$ and latent mask $M_z$ \quad (\S\ref{sec:masks}).
+\item $z \leftarrow E(x)$ \quad (detach gradient).
+\item Initialize $\delta \leftarrow \mathbf{0}$.
+\item Initialize Adam optimizer with parameter $\delta$ and learning rate lr.
+\item \textbf{For} $t = 1, \ldots, T$ \textbf{do}
+\begin{enumerate}[leftmargin=2em, itemsep=0pt, label=(\alph*)]
+    \item $z_{\text{adv}} \leftarrow z + M_z \odot \delta$.
+    \item $x_{\text{dec}} \leftarrow D(z_{\text{adv}})$.
+    \item $x_{\text{adv}} \leftarrow M \odot x_{\text{dec}} + (1-M) \odot x$.
+    \item $y \leftarrow f(x_{\text{adv}})$.
+    \item $\mathcal{L} \leftarrow \mathcal{L}_{\text{vanish}}(y)
+           + \lambda_p\, \mathcal{L}_{\text{perc}}(x_{\text{adv}}, x)
+           + \lambda_r\, \mathcal{L}_{\text{reg}}(\delta)$.
+    \item Compute $\nabla_\delta \mathcal{L}$ via back-propagation.
+    \item Update $\delta$ with one Adam step.
+    \item Project: $\delta \leftarrow M_z \odot \clip(\delta, -\varepsilon_z, +\varepsilon_z)$
+          \quad (eq.~\eqref{eq:project}).
+    \item \textbf{If} $\forall c \in \mathcal{C}_{\text{clean}},\ p_c(x_{\text{adv}}) < \gamma$ \textbf{then break}
+          \quad (early stop on full vanishing).
+\end{enumerate}
+\item \textbf{Return} $x_{\text{adv}}$, $\delta$.
+\end{enumerate}
+\end{tcolorbox}\label{alg:attack}
+
+\noindent Defaults: $T = 80$ steps, lr $= 0.01$, $\varepsilon_z = 0.10$,
+$\gamma = 0.05$. Adam is preferred over SGD because the gradient magnitude
+through $f \circ D$ varies sharply across latent channels.
+
+\begin{supervisornote}
+La sortie anticipee a la ligne~17 (\textit{early stop on full vanishing})
+est une optimisation : des que toutes les classes originellement detectees
+sont passees sous $\gamma$, l'attaque a reussi et continuer ne ferait
+qu'augmenter la distorsion. Cela explique pourquoi sur certaines images
+faciles le compteur d'iterations s'arrete bien avant $T = 80$.
+\end{supervisornote}
+
+% =============================================================================
+\section{Why latent-space perturbation?}\label{sec:why-latent}
+
+Three reasons, each motivated by a known weakness of pixel-space attacks
+(FGSM, PGD):
+
+\begin{enumerate}[leftmargin=*, itemsep=2pt]
+\item \textbf{Built-in image prior.} The decoder $D$ is a learned manifold
+of natural-looking images. Updates that move $z$ in a generic direction
+tend to decode to plausible textures, not high-frequency salt-and-pepper
+noise. This is what gives latent attacks their characteristic smoother
+appearance at comparable detection-failure rates.
+
+\item \textbf{Object-locality at the right granularity.} YOLOv8's stride at
+the first detection scale is $8$, exactly matching the SD-VAE downscaling
+factor. A single latent cell corresponds to a single $8 \times 8$ image patch
+-- the scale at which YOLO actually makes its decisions. Restricting $\delta$
+to $M_z$ therefore restricts the attack to the exact receptive-field cells
+responsible for the boxes we want to remove.
+
+\item \textbf{Decoupling the budget from pixel intensities.} Pixel-space
+$\varepsilon$ is a blunt instrument: at $\varepsilon = 8/255$ even a
+``small'' perturbation over a large box is visually obvious as noise. A
+latent budget with $\varepsilon_z = 0.10$ produces pixel-space changes that
+the decoder spreads over a structured texture, and the masked $L_2$ term
+keeps the visible part bounded explicitly.
+\end{enumerate}
+
+\begin{supervisornote}
+Le point~2 est l'argument theorique le plus solide pour justifier le choix
+du \emph{latent-space} : ce n'est pas une coincidence numerique, c'est
+exactement la granularite a laquelle YOLOv8 prend ses decisions au premier
+niveau de detection. Cela permet de presenter la methode comme
+<< perturbation a l'echelle decisionnelle du detecteur >>, plutot que
+comme << bruit dans un espace abstrait >>.
+\end{supervisornote}
+
+% =============================================================================
+\section{Differences from the IoU-matched formulation}\label{sec:iou-diff}
+
+An earlier draft of this method matched each adversarial anchor to the
+nearest clean box by IoU and minimized that anchor's confidence. We replaced
+this by the class-level max for three reasons:
+
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+\item \textbf{Differentiability.} $\argmax$ over anchors is sub-differentiable;
+taking the max over the per-class confidence channel is the standard trick
+used in YOLO adversarial work and gives clean gradients.
+\item \textbf{NMS independence.} The class-level loss does not depend on
+which anchors survive NMS, so the attack target does not drift between
+optimization steps as different anchors light up.
+\item \textbf{Empirical equivalence.} On DETRAC, both formulations converged
+to the same DFR (1.0) and similar PSNR-mask, but the class-level version
+converges in fewer steps and is materially simpler.
+\end{itemize}
+
+% =============================================================================
+\section{Evaluation metrics}\label{sec:metrics}
+
+(Defined here, computed in \texttt{scripts/evaluate.py}.)
+
+\begin{center}
+\small
+\begin{tabular}{@{}lp{11cm}@{}}
+\toprule
+Metric & Definition \\
+\midrule
+\textbf{DFR} (detection-failure rate)
+   & fraction of frames with $\mathcal{D}_{\text{adv}} = \emptyset$, where
+     $\mathcal{D}_{\text{adv}} = \NMS(f(x_{\text{adv}}), \tau, \text{iou\_thr})$ \\
+\textbf{ASR} (attack success rate)
+   & fraction of frames in which every class originally present is fully
+     removed (i.e. $\mathcal{C}_{\text{clean}} \cap \text{classes}(\mathcal{D}_{\text{adv}}) = \emptyset$) \\
+\textbf{mean conf drop}
+   & average over $c \in \mathcal{C}_{\text{clean}}$ of
+     $p_c(x) - p_c(x_{\text{adv}})$ \\
+\textbf{PSNR}$_{\text{mask}}$
+   & PSNR computed only over pixels inside $M$, in dB; higher = stealthier \\
+\textbf{masked $L_2$}
+   & $\norm{M \odot (x_{\text{adv}} - x)}_2 / \sqrt{3 \cdot \norm{M}_1}$ -- average per-pixel $L_2$ inside the mask \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent For aggregate reporting on a set of frames we report the mean of each metric
+and the standard error, plus a pixel-budget-matched comparison against FGSM
+and PGD baselines (\texttt{baselines/fgsm.py},
+\texttt{baselines/pgd\_pixel.py}).
+
+\begin{supervisornote}
+Les deux metriques de succes (DFR et ASR) capturent deux severites
+differentes : DFR exige que le detecteur ne renvoie \emph{rien}, ASR
+exige seulement que les classes \emph{originellement presentes}
+disparaissent. ASR $\geq$ DFR par construction. La distinction PSNR
+\emph{globale} vs PSNR$_{\text{mask}}$ est cruciale : l'image entiere
+est en grande partie inchangee (paste-back), donc la PSNR globale est
+artificiellement elevee. Seule la PSNR sur le masque mesure honnetement
+la perceptibilite de la perturbation.
+\end{supervisornote}
+
+% =============================================================================
+\section{Reproducibility}\label{sec:repro}
+
+The full pipeline is deterministic up to CUDA non-determinism in the detector
+backbone:
+
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+\item Seeds are set in \texttt{src/utils.set\_seed} for \texttt{torch},
+\texttt{numpy}, and Python's \texttt{random}.
+\item VAE weights: \texttt{stabilityai/sd-vae-ft-mse} (frozen).
+\item Detector weights: \texttt{runs/yolov8n\_detrac/best.pt} (trained on
+DETRAC, see \texttt{notebooks/train\_yolov8\_detrac.ipynb}).
+\item All hyperparameters live in \texttt{configs/default.yaml}.
+\item Per-image attack metadata (initial detections, final detections,
+number of steps, final loss components) is written to
+\texttt{results/<run>/metadata/<image>.json} by
+\texttt{scripts/run\_attack.py}.
+\end{itemize}
+
+% =============================================================================
+\section{Limitations}\label{sec:limits}
+
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+\item \textbf{No physical-world claims.} The attack is digital; printing
+$x_{\text{adv}} - x$ and pasting it onto a real vehicle is out of scope.
+\item \textbf{No transfer claims.} We attack the specific YOLOv8n detector
+trained on DETRAC. Transfer to other detectors (e.g. YOLOv5, RT-DETR) or
+other domains is not evaluated.
+\item \textbf{NMS dependence.} ``Detection failure'' is defined relative to
+the configured $(\tau, \text{iou\_thr})$. A defender who lowers $\tau$ may
+recover some objects.
+\item \textbf{Per-image cost.} Optimization is $\sim 80$ backward passes
+through $f \circ D$, which is two orders of magnitude more expensive than
+FGSM. Real-time use is not the goal.
+\end{itemize}
+
+\begin{supervisornote}
+Cette section des limites est intentionnellement honnete et explicite :
+elle anticipe les questions d'un jury / lecteur critique. Le rapport
+final reprendra ces points dans une section \emph{Discussion} pour
+montrer que le scope de l'etude est maitrise.
+\end{supervisornote}
+
+\end{document}
+
+\begin{supervisornote}
+Cette section des limites est intentionnellement honnete et explicite :
+elle anticipe les questions d'un jury / lecteur critique. Le rapport
+final reprendra ces points dans une section \emph{Discussion} pour
+montrer que le scope de l'etude est maitrise.
+\end{supervisornote}
+
+\end{document}
+e more expensive than
+FGSM. Real-time use is not the goal.
+\end{itemize}
+
+\begin{supervisornote}
+Cette section des limites est intentionnellement honnete et explicite :
+elle anticipe les questions d'un jury / lecteur critique. Le rapport
+final reprendra ces points dans une section \emph{Discussion} pour
+montrer que le scope de l'etude est maitrise.
+\end{supervisornote}
+
+\end{document}

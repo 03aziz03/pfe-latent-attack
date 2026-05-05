@@ -1,0 +1,24 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+# core
+torch>=2.1
+torchvision>=0.16
+numpy>=1.24
+pillow>=10.0
+pyyaml>=6.0
+tqdm>=4.65
+
+# detector
+ultralytics>=8.1
+
+# stable diffusion VAE
+diffusers>=0.26
+transformers>=4.36
+accelerate>=0.25
+safetensors>=0.4
+
+# evaluation (mAP)
+pycocotools>=2.0.7
+
+# optional: nicer plots / qualitative figures
+matplotlib>=3.7
