@@ -18,7 +18,9 @@ vae:
 attack:
   eps_z: 0.50          # sweep range: 0.25, 0.50, 1.00
   gamma: 0.05
-  lambda_p: 0.05
+  lambda_p: 0.001       # LPIPS values ~0.1 vs masked_L2 ~0.001; recalibrated
+                        # lambda_p=0.05 was tuned for masked_L2 scale (~17x smaller)
+                        # With LPIPS, 0.05 dominates vanishing loss -> DFR collapses
   lambda_r: 1.0e-3
   lr: 0.01
   num_steps: 80
