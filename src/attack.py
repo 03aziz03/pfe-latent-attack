@@ -36,7 +36,7 @@ import torch
 from .detector import YOLOv8Wrapper
 from .vae import SDVAE
 from .masks import boxes_to_pixel_mask, pixel_mask_to_latent_mask
-from .losses import vanishing_loss, masked_l2, latent_l2
+from .losses import vanishing_loss, masked_l2, latent_l2, MaskedLPIPS
 from .utils import Detection
 
 
@@ -52,6 +52,8 @@ class AttackConfig:
     early_stop_margin: float = 0.0
     conf_thr: float = 0.25
     iou_nms: float = 0.45
+    use_lpips: bool = False   # if True, replace masked_l2 with MaskedLPIPS
+    lpips_net: str = "alex"   # backbone passed to MaskedLPIPS
 
 
 @dataclass
@@ -79,6 +81,10 @@ class LatentObjectAttack:
         self.det = detector
         self.vae = vae
         self.cfg = config or AttackConfig()
+        self._lpips: MaskedLPIPS | None = None
+        if self.cfg.use_lpips:
+            self._lpips = MaskedLPIPS(net=self.cfg.lpips_net,
+                                      device=str(vae.device))
 
     # ------------------------------------------------------------------
     # main entry point
@@ -135,7 +141,10 @@ class LatentObjectAttack:
             class_conf = self.det.class_confidence(raw)   # (1, A, nc)
 
             L_det = vanishing_loss(class_conf, C_clean, gamma=cfg.gamma)
-            L_perc = masked_l2(x_adv, x, M)
+            if self._lpips is not None:
+                L_perc = self._lpips(x_adv, x, M)
+            else:
+                L_perc = masked_l2(x_adv, x, M)
             L_reg = latent_l2(delta)
             L = L_det + cfg.lambda_p * L_perc + cfg.lambda_r * L_reg
 

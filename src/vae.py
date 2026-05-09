@@ -6,6 +6,8 @@ into a 4-channel latent space whose decoder is biased toward natural images.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import torch
 import torch.nn as nn
 from diffusers import AutoencoderKL
@@ -25,7 +27,8 @@ class SDVAE(nn.Module):
                  model_id: str = "stabilityai/sd-vae-ft-mse",
                  scale: float = 0.18215,
                  device: str = "cuda",
-                 dtype: torch.dtype = torch.float32):
+                 dtype: torch.dtype = torch.float32,
+                 finetuned_weights: str | None = None):
         super().__init__()
         self.device = torch.device(device)
         self.dtype = dtype
@@ -36,6 +39,10 @@ class SDVAE(nn.Module):
         self.vae.eval()
         for p in self.vae.parameters():
             p.requires_grad_(False)
+        if finetuned_weights and Path(finetuned_weights).exists():
+            state = torch.load(finetuned_weights, map_location=self.device)
+            self.vae.load_state_dict(state)
+            print(f"[SDVAE] Loaded fine-tuned weights from {finetuned_weights}")
 
     # ------------------------------------------------------------------
     # encode / decode
@@ -46,6 +53,15 @@ class SDVAE(nn.Module):
         """Pixel image in [0,1] -> scaled latent (B, 4, H/8, W/8)."""
         x = x.to(self.device, self.dtype)
         x = x * 2.0 - 1.0
+        latent = self.vae.encode(x).latent_dist.mean
+        return latent * self.scale
+
+    def encode_with_grad(self, x: torch.Tensor) -> torch.Tensor:
+        """Like encode() but allows gradient flow (for VAE fine-tuning only).
+
+        Do NOT use in the attack loop -- encode() with @no_grad is correct there.
+        """
+        x = x.to(self.device, self.dtype) * 2.0 - 1.0
         latent = self.vae.encode(x).latent_dist.mean
         return latent * self.scale
 

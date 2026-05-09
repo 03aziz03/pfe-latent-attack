@@ -1,0 +1,32 @@
+{
+  "img00001_clean": {
+    "boxes":   [[10, 20, 100, 150], [200, 50, 350, 200]],
+    "scores":  [0.9, 0.85],
+    "classes": [0, 0]
+  },
+  "img00001_adv_empty": {
+    "boxes":   [],
+    "scores":  [],
+    "classes": []
+  },
+  "img00001_adv_partial": {
+    "boxes":   [[10, 20, 100, 150]],
+    "scores":  [0.75],
+    "classes": [0]
+  },
+  "img00002_clean_single": {
+    "boxes":   [[50, 50, 200, 200]],
+    "scores":  [0.92],
+    "classes": [1]
+  },
+  "img00002_adv_class_shift": {
+    "boxes":   [[50, 50, 200, 200]],
+    "scores":  [0.80],
+    "classes": [2]
+  },
+  "img00003_empty": {
+    "boxes":   [],
+    "scores":  [],
+    "classes": []
+  }
+}

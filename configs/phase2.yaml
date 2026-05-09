@@ -1,0 +1,41 @@
+# Phase 2 — LPIPS loss + fine-tuned VAE
+# All fields from default.yaml are included; overrides marked with comments.
+
+# ---- detector ----
+detector:
+  weights: "runs/yolov8n_detrac/best.pt"
+  conf_thr: 0.25
+  iou_nms: 0.45
+  imgsz: 640
+
+# ---- VAE ----
+vae:
+  model_id: "stabilityai/sd-vae-ft-mse"
+  scale: 0.18215
+  finetuned_weights: "runs/vae_detrac/vae_ft.pt"   # loaded if file exists
+
+# ---- attack ----
+attack:
+  eps_z: 0.50          # sweep range: 0.25, 0.50, 1.00
+  gamma: 0.05
+  lambda_p: 0.05
+  lambda_r: 1.0e-3
+  lr: 0.01
+  num_steps: 80
+  early_stop: true
+  early_stop_margin: 0.0
+  use_lpips: true       # Phase 2 default: LPIPS on
+  lpips_net: "alex"
+
+# ---- baselines (pixel-space) ----
+baselines:
+  eps_pixel: 0.0314
+  pgd_steps: 50
+  pgd_alpha: 0.00392
+  mask_restricted: true
+
+# ---- runtime ----
+runtime:
+  device: "cuda"
+  dtype: "float32"
+  seed: 0

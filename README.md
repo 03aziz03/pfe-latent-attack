@@ -141,3 +141,8 @@ All adjustable in `configs/default.yaml`.
 - YOLOv8 weights (`yolov8n.pt`) are downloaded by `ultralytics` on first run.
 - This repository implements **only digital attacks** on **YOLOv8**. No physical
   attacks, no other detectors, no diffusion denoising.
+- See `docs/experiments.md` for the full experimental results, analysis, and
+  improvement roadmap.
+- GPU strongly recommended for the attack loop (L4 on Colab Pro: ~2 min/image
+  at 200 steps). CPU is only viable for the paste-back sanity check (Check 1+3);
+  the VAE backward pass on CPU is not tractable at 640×640.

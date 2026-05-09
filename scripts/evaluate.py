@@ -29,6 +29,15 @@ Usage:
 """
 from __future__ import annotations
 
+import warnings
+
+warnings.warn(
+    "scripts/evaluate.py uses loose DFR/ASR definitions. "
+    "Use src/eval/metrics.py for strict definitions matching docs/method.tex.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 import argparse
 import json
 import math

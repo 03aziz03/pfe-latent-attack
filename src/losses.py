@@ -66,3 +66,45 @@ def masked_l2(x_adv: torch.Tensor, x: torch.Tensor, M: torch.Tensor) -> torch.Te
 def latent_l2(delta: torch.Tensor) -> torch.Tensor:
     """Mean-squared latent perturbation magnitude."""
     return delta.pow(2).mean()
+
+
+# ----------------------------- LPIPS (perceptual) -----------------
+
+
+class MaskedLPIPS(torch.nn.Module):
+    """Masked perceptual loss using LPIPS (AlexNet backbone).
+
+    Computes LPIPS between x_adv and x after zeroing pixels outside the
+    bounding-box mask. The result is normalized by the mask area fraction
+    so that lambda_p stays comparable across images with different object sizes.
+
+    Args:
+        net:    LPIPS backbone, one of 'alex' (recommended), 'vgg', 'squeeze'.
+        device: torch device string.
+    """
+
+    def __init__(self, net: str = "alex", device: str = "cuda"):
+        super().__init__()
+        import lpips  # lazy import so the rest of the codebase works without it
+        self._fn = lpips.LPIPS(net=net, verbose=False).to(device)
+        for p in self._fn.parameters():
+            p.requires_grad_(False)
+
+    def forward(
+        self,
+        x_adv: torch.Tensor,   # (1, 3, H, W) in [0, 1]
+        x: torch.Tensor,        # (1, 3, H, W) in [0, 1]
+        M: torch.Tensor,        # (1, 1, H, W) binary mask
+    ) -> torch.Tensor:
+        """Return masked LPIPS scalar."""
+        # zero out non-mask regions in both images
+        x_adv_m = x_adv * M
+        x_m = x * M
+        # LPIPS expects [-1, 1]
+        x_adv_m = x_adv_m * 2.0 - 1.0
+        x_m = x_m * 2.0 - 1.0
+        loss = self._fn(x_adv_m, x_m)          # scalar or (1,1,1,1)
+        loss = loss.squeeze()
+        # normalize by mask fraction so loss scale is independent of bbox size
+        mask_frac = M.mean().clamp(min=1e-4)
+        return loss / mask_frac

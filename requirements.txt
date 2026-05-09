@@ -22,3 +22,6 @@ pycocotools>=2.0.7
 
 # optional: nicer plots / qualitative figures
 matplotlib>=3.7
+
+# perceptual loss (Phase 2)
+lpips>=0.1.4
