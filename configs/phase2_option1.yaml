@@ -1,0 +1,52 @@
+# Phase 2 — Option 1: Original SD-VAE + LPIPS perceptual loss
+#
+# Key differences from phase2.yaml:
+#   - finetuned_weights: REMOVED (reverts to original stabilityai/sd-vae-ft-mse)
+#     Rationale: fine-tuned decoder smooths latent perturbations, collapsing DFR.
+#     The original VAE preserves attack effectiveness while LPIPS constrains
+#     perceptual quality.
+#   - lambda_p: 0.001  (recalibrated for LPIPS scale ~0.1-0.2;
+#     Phase 1 used lambda_p=0.05 for masked-L2 scale ~0.001-0.009, i.e. 17x smaller)
+#   - use_lpips: true  (replaces masked-L2 with MaskedLPIPS AlexNet)
+#
+# Run tune_lambda_p.py first on 5 frames to verify operating point.
+
+# ---- detector ----
+detector:
+  weights: "runs/yolov8n_detrac/best.pt"
+  conf_thr: 0.25
+  iou_nms: 0.45
+  imgsz: 640
+
+# ---- VAE ----
+vae:
+  model_id: "stabilityai/sd-vae-ft-mse"
+  scale: 0.18215
+  # finetuned_weights intentionally omitted — original SD-VAE only
+
+# ---- attack ----
+attack:
+  eps_z: 0.50           # central operating point for ablation
+  gamma: 0.05
+  lambda_p: 0.001       # LPIPS scale ~0.10-0.20; this keeps vanishing loss dominant
+                        # sweep {0.0005, 0.001, 0.005, 0.01} via tune_lambda_p.py
+  lambda_r: 1.0e-3
+  lr: 0.01
+  num_steps: 80
+  early_stop: true
+  early_stop_margin: 0.0
+  use_lpips: true
+  lpips_net: "alex"
+
+# ---- baselines (pixel-space) ----
+baselines:
+  eps_pixel: 0.0314
+  pgd_steps: 50
+  pgd_alpha: 0.00392
+  mask_restricted: true
+
+# ---- runtime ----
+runtime:
+  device: "cuda"
+  dtype: "float32"
+  seed: 0

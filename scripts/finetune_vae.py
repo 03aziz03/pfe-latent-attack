@@ -1,51 +1,27 @@
 """Fine-tune the SD-VAE decoder on DETRAC surveillance frames.
 
-Goal: improve reconstruction quality on letterboxed 640x640 frames, reducing
-the base reconstruction error that currently dominates PSNR_mask.
+Memory budget (22 GB Colab L4):
+  - Gradient checkpointing on decoder: stores O(1) activations instead of O(L)
+  - bfloat16 forward pass: halves activation memory vs float32
+  - Fine-tune at 512x512 (VAE is fully convolutional; transfers to 640x640)
+  - batch_size=1 safe default; can try 2 if memory allows
 
-Design choice -- DECODER ONLY fine-tuning (encoder stays frozen):
-  - The attack caches z = encode(x) with @no_grad. Keeping the encoder frozen
-    means cached latents remain valid after fine-tuning -- no need to re-run
-    the attack from scratch.
-  - Decoder-only fine-tuning uses ~half the GPU memory of joint fine-tuning
-    (no gradients through encoder activations).
-  - Empirically, decoder-only domain adaptation is sufficient: the encoder
-    already maps surveillance frames to reasonable latents; the decoder needs
-    to learn to reconstruct surveillance-style textures and colours.
-  - Use --finetune_encoder to enable joint fine-tuning if needed (requires
-    more VRAM; use batch_size=1).
-
-Mixed precision: bfloat16 forward pass, float32 optimizer state.
-  Cuts activation memory by ~2x. bfloat16 preferred over float16 for
-  diffusers models (avoids inf/nan in GroupNorm).
-
-Data layout (3 sequences, separate from attack eval set):
-
-    data/finetune_seqs/
-        MVI_XXXXX/    <- 60 frames from sequence A
-        MVI_YYYYY/    <- 60 frames from sequence B
-        MVI_ZZZZZ/    <- 60 frames from sequence C
-
-    data/images_50/   <- attack eval set, never touched here
-
-Train/val split: stratified by sequence (val_frac=0.15 -> ~9 val per seq).
-Early stopping: patience=3 epochs on validation loss.
+Design: decoder-only fine-tuning, encoder frozen.
+  The attack caches z = encode(x) with @no_grad; frozen encoder means
+  cached latents stay valid after fine-tuning.
 
 Usage:
     python scripts/finetune_vae.py \\
         --data data/finetune_seqs \\
         --output runs/vae_detrac \\
-        --epochs 20 \\
-        --lr 1e-5 \\
-        --batch_size 2
+        --epochs 20 --lr 1e-5 --batch_size 1
 
-Expected runtime: ~25 min on Colab L4, ~2 Colab Pro units.
+Expected runtime: ~20 min on Colab L4, ~1.5 Colab Pro units.
 """
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import random
 import sys
 from pathlib import Path
@@ -71,12 +47,19 @@ from src.viz.letterbox import letterbox_image
 
 
 class DETRACDataset(Dataset):
-    """Loads DETRAC frames, letterboxes to 640x640, returns float32 [0,1]."""
+    """Loads DETRAC frames, letterboxes to target size, returns float32 [0,1]."""
 
-    def __init__(self, paths: list[Path], augment: bool = False, seed: int = 42):
-        self.paths = paths
+    def __init__(
+        self,
+        paths: list[Path],
+        imgsz: int = 512,
+        augment: bool = False,
+        seed: int = 42,
+    ):
+        self.paths  = paths
+        self.imgsz  = imgsz
         self.augment = augment
-        self._rng = random.Random(seed)
+        self._rng   = random.Random(seed)
 
     def __len__(self) -> int:
         return len(self.paths)
@@ -84,7 +67,7 @@ class DETRACDataset(Dataset):
     def __getitem__(self, idx: int) -> torch.Tensor:
         img = cv2.imread(str(self.paths[idx]))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_lb, _, _ = letterbox_image(img, target=(640, 640))
+        img_lb, _, _ = letterbox_image(img, target=(self.imgsz, self.imgsz))
         arr = img_lb.astype(np.float32) / 255.0
 
         if self.augment:
@@ -101,15 +84,14 @@ def stratified_split(
     val_frac: float = 0.15,
     seed: int = 42,
 ) -> tuple[list[Path], list[Path]]:
-    """Split per subdirectory (sequence), last val_frac frames -> val."""
+    """Split per subdirectory (sequence). Last val_frac frames -> val."""
     data_dir = Path(data_dir)
-    subdirs = sorted([d for d in data_dir.iterdir() if d.is_dir()])
+    subdirs  = sorted([d for d in data_dir.iterdir() if d.is_dir()])
     if not subdirs:
         subdirs = [data_dir]
 
     train_paths: list[Path] = []
     val_paths:   list[Path] = []
-
     for seq_dir in subdirs:
         frames = sorted(
             list(seq_dir.rglob("*.jpg")) + list(seq_dir.rglob("*.png"))
@@ -121,7 +103,7 @@ def stratified_split(
         train_paths.extend(frames[:-n_val])
 
     if not train_paths and not val_paths:
-        raise FileNotFoundError(f"No image files found under {data_dir}")
+        raise FileNotFoundError(f"No images found under {data_dir}")
 
     random.Random(seed).shuffle(train_paths)
     return train_paths, val_paths
@@ -137,7 +119,6 @@ def compute_loss(
     x: torch.Tensor,
     lpips_fn,
 ) -> torch.Tensor:
-    """0.7 * MSE + 0.3 * LPIPS, both in [0,1] pixel space."""
     x_01       = x.clamp(0, 1)
     x_recon_01 = x_recon.clamp(0, 1)
     mse    = F.mse_loss(x_recon_01, x_01)
@@ -146,11 +127,10 @@ def compute_loss(
 
 
 def train(args: argparse.Namespace) -> None:
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device  = "cuda" if torch.cuda.is_available() else "cpu"
     use_amp = (device == "cuda")
-    print(f"Device: {device}  |  Mixed precision (bfloat16): {use_amp}")
+    print(f"Device: {device}  |  AMP bfloat16: {use_amp}  |  imgsz: {args.imgsz}")
 
-    # Clear any leftover cache
     if device == "cuda":
         torch.cuda.empty_cache()
 
@@ -159,13 +139,10 @@ def train(args: argparse.Namespace) -> None:
 
     # --- split ---
     train_paths, val_paths = stratified_split(args.data, val_frac=args.val_frac)
-    print(f"Fine-tune data : {args.data}")
-    print(f"Train frames   : {len(train_paths)}")
-    print(f"Val frames     : {len(val_paths)}")
-    print(f"Decoder only   : {not args.finetune_encoder}")
+    print(f"Train frames : {len(train_paths)}  |  Val frames: {len(val_paths)}")
 
-    train_ds = DETRACDataset(train_paths, augment=True)
-    val_ds   = DETRACDataset(val_paths,   augment=False)
+    train_ds = DETRACDataset(train_paths, imgsz=args.imgsz, augment=True)
+    val_ds   = DETRACDataset(val_paths,   imgsz=args.imgsz, augment=False)
     train_loader = DataLoader(train_ds, batch_size=args.batch_size,
                               shuffle=True,  num_workers=2,
                               pin_memory=(device == "cuda"))
@@ -173,24 +150,26 @@ def train(args: argparse.Namespace) -> None:
                               shuffle=False, num_workers=0,
                               pin_memory=(device == "cuda"))
 
-    # --- model: load in float32, freeze everything first ---
+    # --- model ---
     vae = SDVAE(device=device, dtype=torch.float32)
+
+    # Freeze everything, then unfreeze decoder only
     for p in vae.vae.parameters():
         p.requires_grad_(False)
-
-    # Unfreeze decoder (always) and optionally encoder
     for p in vae.vae.decoder.parameters():
         p.requires_grad_(True)
-    if args.finetune_encoder:
-        for p in vae.vae.encoder.parameters():
-            p.requires_grad_(True)
-        print("Fine-tuning encoder + decoder jointly.")
-    else:
-        print("Fine-tuning decoder only (encoder frozen).")
+
+    # KEY FIX: gradient checkpointing on the decoder
+    # Stores only O(1) activations instead of O(L); ~30% slower but fits in VRAM
+    vae.vae.decoder.gradient_checkpointing = True
+    # Also enable via diffusers API if available
+    if hasattr(vae.vae, "enable_gradient_checkpointing"):
+        vae.vae.enable_gradient_checkpointing()
 
     vae.vae.train()
+    print("Decoder-only fine-tuning  |  Gradient checkpointing: ON")
 
-    # --- LPIPS (always float32, always frozen) ---
+    # --- LPIPS ---
     import lpips as lpips_lib
     lpips_fn = lpips_lib.LPIPS(net="alex", verbose=False).to(device)
     for p in lpips_fn.parameters():
@@ -207,7 +186,7 @@ def train(args: argparse.Namespace) -> None:
     per_epoch_val_loss:   list[float] = []
     best_val_loss    = float("inf")
     patience_counter = 0
-    best_ckpt_path   = out_dir / "vae_ft.pt"
+    best_ckpt        = out_dir / "vae_ft.pt"
 
     for epoch in range(args.epochs):
         # --- train ---
@@ -218,16 +197,11 @@ def train(args: argparse.Namespace) -> None:
                       desc=f"Epoch {epoch+1}/{args.epochs} [train]",
                       leave=False):
             x = x.to(device)
-
             with torch.amp.autocast(device_type=device, dtype=torch.bfloat16,
                                     enabled=use_amp):
-                # Encoder: frozen -> no_grad (even if finetune_encoder=False)
-                if args.finetune_encoder:
-                    z = vae.encode_with_grad(x)
-                else:
-                    z = vae.encode(x)          # @no_grad inside encode()
-                x_recon = vae.decode(z)        # gradients flow through decoder
-                loss = compute_loss(x_recon.float(), x.float(), lpips_fn)
+                z       = vae.encode(x)       # frozen encoder, @no_grad inside
+                x_recon = vae.decode(z)        # gradient flows through decoder
+                loss    = compute_loss(x_recon.float(), x.float(), lpips_fn)
 
             optimizer.zero_grad(set_to_none=True)
             scaler.scale(loss).backward()
@@ -251,25 +225,22 @@ def train(args: argparse.Namespace) -> None:
                 x = x.to(device)
                 with torch.amp.autocast(device_type=device, dtype=torch.bfloat16,
                                         enabled=use_amp):
-                    z      = vae.encode(x)
+                    z       = vae.encode(x)
                     x_recon = vae.decode(z)
-                    loss = compute_loss(x_recon.float(), x.float(), lpips_fn)
+                    loss    = compute_loss(x_recon.float(), x.float(), lpips_fn)
                 val_loss += float(loss.item())
                 n_val    += 1
-
         mean_val = val_loss / max(n_val, 1)
         per_epoch_val_loss.append(mean_val)
 
         print(f"  Epoch {epoch+1:3d}/{args.epochs}  "
-              f"train={mean_train:.6f}  val={mean_val:.6f}  "
-              f"best={best_val_loss:.6f}")
+              f"train={mean_train:.6f}  val={mean_val:.6f}  best={best_val_loss:.6f}")
 
-        # --- early stopping ---
         if mean_val < best_val_loss:
             best_val_loss    = mean_val
             patience_counter = 0
-            torch.save(vae.vae.state_dict(), best_ckpt_path)
-            print(f"    --> Best val loss. Checkpoint saved.")
+            torch.save(vae.vae.state_dict(), best_ckpt)
+            print(f"    --> Best. Checkpoint saved.")
         else:
             patience_counter += 1
             print(f"    --> No improvement ({patience_counter}/{args.patience})")
@@ -277,7 +248,7 @@ def train(args: argparse.Namespace) -> None:
                 print(f"Early stopping at epoch {epoch+1}.")
                 break
 
-    print(f"\nBest checkpoint : {best_ckpt_path}  (val={best_val_loss:.6f})")
+    print(f"\nBest checkpoint: {best_ckpt}  (val={best_val_loss:.6f})")
 
     meta = {
         "num_epochs_run":       len(per_epoch_train_loss),
@@ -288,11 +259,13 @@ def train(args: argparse.Namespace) -> None:
         "n_train_frames":       len(train_paths),
         "n_val_frames":         len(val_paths),
         "data_dir":             str(args.data),
-        "decoder_only":         not args.finetune_encoder,
+        "imgsz":                args.imgsz,
+        "decoder_only":         True,
+        "gradient_checkpointing": True,
     }
     with open(out_dir / "ft_meta.json", "w") as f:
         json.dump(meta, f, indent=2)
-    print(f"Metadata : {out_dir / 'ft_meta.json'}")
+    print(f"Metadata: {out_dir / 'ft_meta.json'}")
 
 
 # ---------------------------------------------------------------------------
@@ -304,20 +277,21 @@ def main() -> None:
     ap = argparse.ArgumentParser(
         description=(
             "Fine-tune SD-VAE decoder on DETRAC frames. "
-            "Expected --data layout: one subdirectory per DETRAC sequence. "
-            "Use --batch_size 1 if still OOM."
+            "Uses gradient checkpointing + bfloat16 to fit in 22 GB VRAM. "
+            "One subdir per sequence under --data."
         )
     )
-    ap.add_argument("--data",             default="data/finetune_seqs")
-    ap.add_argument("--output",           default="runs/vae_detrac")
-    ap.add_argument("--epochs",           type=int,   default=20)
-    ap.add_argument("--lr",               type=float, default=1e-5)
-    ap.add_argument("--batch_size",       type=int,   default=2,
-                    help="Default 2 (safe for 22 GB). Use 1 if OOM.")
-    ap.add_argument("--val_frac",         type=float, default=0.15)
-    ap.add_argument("--patience",         type=int,   default=3)
-    ap.add_argument("--finetune_encoder", action="store_true",
-                    help="Also fine-tune encoder (more VRAM; use batch_size=1)")
+    ap.add_argument("--data",       default="data/finetune_seqs")
+    ap.add_argument("--output",     default="runs/vae_detrac")
+    ap.add_argument("--epochs",     type=int,   default=20)
+    ap.add_argument("--lr",         type=float, default=1e-5)
+    ap.add_argument("--batch_size", type=int,   default=1,
+                    help="Default 1 (safe for 22 GB). Try 2 if VRAM allows.")
+    ap.add_argument("--imgsz",      type=int,   default=512,
+                    help="Fine-tune resolution. VAE is fully convolutional; "
+                         "weights transfer to 640x640 at inference.")
+    ap.add_argument("--val_frac",   type=float, default=0.15)
+    ap.add_argument("--patience",   type=int,   default=3)
     args = ap.parse_args()
     train(args)
 
