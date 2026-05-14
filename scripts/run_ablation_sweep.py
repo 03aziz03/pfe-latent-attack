@@ -69,7 +69,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.attack import AttackConfig, LatentObjectAttack
 from src.detector import YOLOv8Wrapper
-from src.eval.metrics import FrameDetections, per_frame_dfr
+from src.eval.metrics import (
+    FrameDetections,
+    per_frame_dfr,
+    per_frame_asr,
+    per_frame_map_drop,
+)
 from src.losses import MaskedLPIPS
 from src.masks import boxes_to_pixel_mask
 from src.utils import load_config, load_image, set_seed
@@ -267,8 +272,16 @@ def sweep_latent(
 
         adv_dets = detector.detect_nms(x_adv, conf_thr=conf_thr, iou_thr=iou_nms)
         n_adv    = len(adv_dets)
-        dfr1     = per_frame_dfr(dets_to_frame(clean_dets),
-                                 dets_to_frame(adv_dets), conf_thr=0.0)
+
+        clean_fd = dets_to_frame(clean_dets)
+        adv_fd1  = dets_to_frame(adv_dets)
+
+        dfr1 = per_frame_dfr(clean_fd, adv_fd1, conf_thr=0.0)
+        asr1 = per_frame_asr(clean_fd, adv_fd1, conf_thr=0.0)
+        try:
+            map_drop1 = per_frame_map_drop(clean_fd, adv_fd1)
+        except Exception:
+            map_drop1 = None
 
         H, W = x.shape[2], x.shape[3]
         if n_clean > 0:
@@ -280,36 +293,49 @@ def sweep_latent(
             lpips1 = float(lpips_loss(x_adv, x, M_pix).item()) if n_clean > 0 else None
 
         opt1_records.append({
-            "stem":    img_path.stem,
-            "eps":     eps,
-            "variant": "option1",
-            "filter":  "none",
-            "dfr":     dfr1,
-            "lpips":   lpips1,
-            "n_clean": n_clean,
-            "n_adv":   n_adv,
-            "steps":   result.steps_taken,
+            "stem":     img_path.stem,
+            "eps":      eps,
+            "variant":  "option1",
+            "filter":   "none",
+            "dfr":      dfr1,
+            "dfr_strict": int(n_adv == 0 and n_clean > 0),
+            "asr":      int(asr1),
+            "map_drop": map_drop1,
+            "lpips":    lpips1,
+            "n_clean":  n_clean,
+            "n_adv":    n_adv,
+            "steps":    result.steps_taken,
         })
 
         # ---- Option 2a: bilateral filter ----
         x_bil    = bilateral_filter_masked(x_adv, x, M_pix)
         bil_dets = detector.detect_nms(x_bil, conf_thr=conf_thr, iou_thr=iou_nms)
         n_bil    = len(bil_dets)
-        dfr2     = per_frame_dfr(dets_to_frame(clean_dets),
-                                 dets_to_frame(bil_dets), conf_thr=0.0)
+
+        adv_fd2  = dets_to_frame(bil_dets)
+        dfr2     = per_frame_dfr(clean_fd, adv_fd2, conf_thr=0.0)
+        asr2     = per_frame_asr(clean_fd, adv_fd2, conf_thr=0.0)
+        try:
+            map_drop2 = per_frame_map_drop(clean_fd, adv_fd2)
+        except Exception:
+            map_drop2 = None
+
         with torch.no_grad():
             lpips2 = float(lpips_loss(x_bil, x, M_pix).item()) if n_clean > 0 else None
 
         opt2_records.append({
-            "stem":    img_path.stem,
-            "eps":     eps,
-            "variant": "option2",
-            "filter":  "bilateral",
-            "dfr":     dfr2,
-            "lpips":   lpips2,
-            "n_clean": n_clean,
-            "n_adv":   n_bil,
-            "steps":   result.steps_taken,
+            "stem":     img_path.stem,
+            "eps":      eps,
+            "variant":  "option2",
+            "filter":   "bilateral",
+            "dfr":      dfr2,
+            "dfr_strict": int(n_bil == 0 and n_clean > 0),
+            "asr":      int(asr2),
+            "map_drop": map_drop2,
+            "lpips":    lpips2,
+            "n_clean":  n_clean,
+            "n_adv":    n_bil,
+            "steps":    result.steps_taken,
         })
 
     return opt1_records, opt2_records
@@ -352,8 +378,16 @@ def sweep_pgd(
         )
         adv_dets = detector.detect_nms(x_adv, conf_thr=conf_thr, iou_thr=iou_nms)
         n_adv    = len(adv_dets)
-        dfr      = per_frame_dfr(dets_to_frame(clean_dets),
-                                 dets_to_frame(adv_dets), conf_thr=0.0)
+
+        clean_fd = dets_to_frame(clean_dets)
+        adv_fd   = dets_to_frame(adv_dets)
+
+        dfr  = per_frame_dfr(clean_fd, adv_fd, conf_thr=0.0)
+        asr  = per_frame_asr(clean_fd, adv_fd, conf_thr=0.0)
+        try:
+            map_drop = per_frame_map_drop(clean_fd, adv_fd)
+        except Exception:
+            map_drop = None
 
         H, W = x.shape[2], x.shape[3]
         M_pix = boxes_to_pixel_mask(clean_dets, H=H, W=W, device=device) if n_clean > 0 \
@@ -362,15 +396,18 @@ def sweep_pgd(
             lpips_val = float(lpips_loss(x_adv, x, M_pix).item()) if n_clean > 0 else None
 
         records.append({
-            "stem":    img_path.stem,
-            "eps":     eps,
-            "variant": "pgd",
-            "filter":  "none",
-            "dfr":     dfr,
-            "lpips":   lpips_val,
-            "n_clean": n_clean,
-            "n_adv":   n_adv,
-            "steps":   pgd_cfg.get("pgd_steps", 50),
+            "stem":     img_path.stem,
+            "eps":      eps,
+            "variant":  "pgd",
+            "filter":   "none",
+            "dfr":      dfr,
+            "dfr_strict": int(n_adv == 0 and n_clean > 0),
+            "asr":      int(asr),
+            "map_drop": map_drop,
+            "lpips":    lpips_val,
+            "n_clean":  n_clean,
+            "n_adv":    n_adv,
+            "steps":    pgd_cfg.get("pgd_steps", 50),
         })
 
     return records
@@ -382,29 +419,54 @@ def sweep_pgd(
 
 
 def summarise(tag: str, records: list[dict], attack: str, eps: float) -> dict:
-    dfr_vals   = [r["dfr"]   for r in records if r["n_clean"] > 0]
-    lpips_vals = [r["lpips"] for r in records
-                  if r["lpips"] is not None and r["n_clean"] > 0]
-    n = len(dfr_vals)
     import math
+
+    valid = [r for r in records if r["n_clean"] > 0]
+    n = len(valid)
+
+    def mean(vals):
+        v = [x for x in vals if x is not None]
+        return float(sum(v) / len(v)) if v else None
+
     def se(vals):
-        if len(vals) < 2:
+        v = [x for x in vals if x is not None]
+        if len(v) < 2:
             return 0.0
-        m = sum(vals) / len(vals)
-        return math.sqrt(sum((v - m) ** 2 for v in vals) / (len(vals) - 1) / len(vals))
+        m = sum(v) / len(v)
+        return math.sqrt(sum((x - m) ** 2 for x in v) / (len(v) - 1) / len(v))
+
+    dfr_vals      = [r["dfr"]       for r in valid]
+    asr_vals      = [r.get("asr")   for r in valid]
+    map_drop_vals = [r.get("map_drop") for r in valid]
+    lpips_vals    = [r["lpips"]     for r in valid if r.get("lpips") is not None]
+
+    # DFR strict: fraction of frames where all detections suppressed (n_adv == 0)
+    dfr_strict_vals = [r.get("dfr_strict", 0) for r in valid]
 
     return {
-        "tag":          tag,
-        "attack":       attack,
-        "eps":          eps,
-        "n_frames":     len(records),
-        "mean_dfr":     float(sum(dfr_vals) / n)           if n else None,
-        "se_dfr":       float(se(dfr_vals))                if n else None,
-        "mean_lpips":   float(sum(lpips_vals) / len(lpips_vals)) if lpips_vals else None,
-        "se_lpips":     float(se(lpips_vals))              if lpips_vals else None,
-        "dfr_pos":      sum(1 for v in dfr_vals if v > 0),
-        "dfr_neg":      sum(1 for v in dfr_vals if v < 0),
-        "dfr_zero":     sum(1 for v in dfr_vals if v == 0),
+        "tag":            tag,
+        "attack":         attack,
+        "eps":            eps,
+        "n_frames":       len(records),
+        "n_valid":        n,
+        # --- DFR proportionnel ---
+        "mean_dfr":       mean(dfr_vals),
+        "se_dfr":         se(dfr_vals),
+        "dfr_pos":        sum(1 for v in dfr_vals if v > 0),
+        "dfr_neg":        sum(1 for v in dfr_vals if v < 0),
+        "dfr_zero":       sum(1 for v in dfr_vals if v == 0),
+        # --- DFR strict (fraction frames avec n_adv==0) ---
+        "dfr_strict_rate": float(sum(dfr_strict_vals) / n) if n else None,
+        "dfr_strict_count": sum(dfr_strict_vals),
+        # --- ASR (toutes classes absentes) ---
+        "mean_asr":       mean(asr_vals),
+        "asr_count":      sum(1 for v in asr_vals if v),
+        # --- mAP drop ---
+        "mean_map_drop":  mean(map_drop_vals),
+        "se_map_drop":    se([v for v in map_drop_vals if v is not None]),
+        # --- LPIPS ---
+        "mean_lpips":     mean(lpips_vals),
+        "se_lpips":       se(lpips_vals),
     }
 
 
@@ -520,16 +582,24 @@ def main() -> None:
     with open(summary_path, "w") as f:
         json.dump(all_summaries, f, indent=2)
 
-    print("\n" + "="*72)
-    print(f"{'Config':<32} {'mean_DFR':>10} {'±SE':>7} {'mean_LPIPS':>11} {'pos':>5} {'neg':>5}")
-    print("-"*72)
+    print("\n" + "="*95)
+    print(f"{'Config':<32} {'DFR':>8} {'±SE':>6} {'DFR_strict':>10} {'ASR':>6} {'mAP_drop':>9} {'LPIPS':>7}")
+    print("-"*95)
     for tag, s in all_summaries.items():
-        dfr_s   = f"{s['mean_dfr']:+.4f}"   if s["mean_dfr"]   is not None else "  N/A  "
-        se_s    = f"{s['se_dfr']:.4f}"       if s["se_dfr"]     is not None else " N/A "
-        lpips_s = f"{s['mean_lpips']:.4f}"   if s["mean_lpips"] is not None else "  N/A  "
-        print(f"{tag:<32} {dfr_s:>10} {se_s:>7} {lpips_s:>11} {s['dfr_pos']:>5} {s['dfr_neg']:>5}")
-    print("="*72)
+        dfr_s    = f"{s['mean_dfr']:+.4f}"        if s.get("mean_dfr")        is not None else "   N/A"
+        se_s     = f"{s['se_dfr']:.4f}"            if s.get("se_dfr")          is not None else "  N/A"
+        strict_s = f"{s['dfr_strict_rate']:.3f}"   if s.get("dfr_strict_rate") is not None else "   N/A"
+        asr_s    = f"{s['mean_asr']:.3f}"          if s.get("mean_asr")        is not None else "  N/A"
+        map_s    = f"{s['mean_map_drop']:.4f}"     if s.get("mean_map_drop")   is not None else "    N/A"
+        lpips_s  = f"{s['mean_lpips']:.4f}"        if s.get("mean_lpips")      is not None else "   N/A"
+        print(f"{tag:<32} {dfr_s:>8} {se_s:>6} {strict_s:>10} {asr_s:>6} {map_s:>9} {lpips_s:>7}")
+    print("="*95)
     print(f"\nSummary → {summary_path}")
+    print("\nLégende :")
+    print("  DFR        = 1 - n_adv/n_clean  (proportionnel, par frame)")
+    print("  DFR_strict = fraction frames où n_adv == 0  (suppression totale)")
+    print("  ASR        = fraction frames où toutes les classes clean disparaissent")
+    print("  mAP_drop   = 1 - mAP@0.5  (clean detections comme pseudo-GT)")
 
 
 if __name__ == "__main__":
