@@ -1,0 +1,64 @@
+# Phase 3A — Objectness-Aware Vanishing Loss
+#
+# Adds an anchor-level objectness term on top of the class-level vanishing loss.
+# In YOLOv8 there is no dedicated objectness head; the maximum class confidence
+# per anchor plays the same role (obj * cls in YOLOv5 notation is collapsed into
+# class confidence in YOLOv8). Penalising every anchor's max-class score drives
+# down the overall detector response rather than only the classes in C_clean.
+#
+# Hypothesis: targeting anchors globally is ~45% more effective at suppressing
+# post-NMS detections (cf. objectness-aware adversarial attack literature).
+# Measure: DFR_strict, ASR, and mAP_drop vs. phase3_baseline.
+#
+# Key change vs. baseline: use_objectness=true, obj_weight=0.5
+# Everything else is identical to phase3_baseline.
+
+# ---- detector ----
+detector:
+  weights: "runs/yolov8n_detrac/best.pt"
+  conf_thr: 0.25
+  iou_nms: 0.45
+  imgsz: 640
+
+# ---- VAE ----
+vae:
+  model_id: "stabilityai/sd-vae-ft-mse"
+  scale: 0.18215
+
+# ---- attack ----
+attack:
+  eps_z: 0.50
+  gamma: 0.05
+  lambda_p: 0.001
+  lambda_r: 1.0e-3
+  lr: 0.01
+  num_steps: 80
+  early_stop: true
+  early_stop_margin: 0.0
+  use_lpips: true
+  lpips_net: "alex"
+
+  # Phase 3A — objectness enabled
+  use_objectness: true
+  obj_weight: 0.5        # L = L_vanish + 0.5 * L_obj + lambda_p * L_perc + ...
+
+  # Other Phase 3 extensions — disabled to isolate 3A
+  use_momentum: false
+  momentum_decay: 0.9
+  n_restarts: 1
+  restart_noise: 0.5
+  use_ssim: false
+  ssim_weight: 0.3
+
+# ---- baselines ----
+baselines:
+  eps_pixel: 0.0314
+  pgd_steps: 50
+  pgd_alpha: 0.00392
+  mask_restricted: true
+
+# ---- runtime ----
+runtime:
+  device: "cuda"
+  dtype: "float32"
+  seed: 0

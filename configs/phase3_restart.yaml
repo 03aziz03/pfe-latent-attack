@@ -1,0 +1,64 @@
+# Phase 3C — Multi-Restart Optimization
+#
+# Runs the attack n_restarts=3 times per frame with different δ initialisations:
+#   - Start 0: δ = 0  (standard, same as baseline)
+#   - Starts 1, 2: δ₀ ~ U(-restart_noise * eps_z, +restart_noise * eps_z) × Mz
+# The result with the fewest post-NMS adversarial detections is returned;
+# ties are broken by the final detection loss.
+#
+# Rationale: the loss landscape of f∘D in latent space can be non-convex.
+# Multiple starts mitigate entrapment in poor local minima at the cost of
+# proportionally more compute (~3x for n_restarts=3).
+#
+# Key change vs. baseline: n_restarts=3, restart_noise=0.5
+# Everything else identical to phase3_baseline.
+
+# ---- detector ----
+detector:
+  weights: "runs/yolov8n_detrac/best.pt"
+  conf_thr: 0.25
+  iou_nms: 0.45
+  imgsz: 640
+
+# ---- VAE ----
+vae:
+  model_id: "stabilityai/sd-vae-ft-mse"
+  scale: 0.18215
+
+# ---- attack ----
+attack:
+  eps_z: 0.50
+  gamma: 0.05
+  lambda_p: 0.001
+  lambda_r: 1.0e-3
+  lr: 0.01
+  num_steps: 80
+  early_stop: true
+  early_stop_margin: 0.0
+  use_lpips: true
+  lpips_net: "alex"
+
+  # Phase 3C — multi-restart enabled
+  n_restarts: 3          # 1 zero-init + 2 random-noise inits
+  restart_noise: 0.5     # initial δ ~ U(-0.5*eps_z, +0.5*eps_z)
+
+  # Other Phase 3 extensions — disabled to isolate 3C
+  use_objectness: false
+  obj_weight: 0.5
+  use_momentum: false
+  momentum_decay: 0.9
+  use_ssim: false
+  ssim_weight: 0.3
+
+# ---- baselines ----
+baselines:
+  eps_pixel: 0.0314
+  pgd_steps: 50
+  pgd_alpha: 0.00392
+  mask_restricted: true
+
+# ---- runtime ----
+runtime:
+  device: "cuda"
+  dtype: "float32"
+  seed: 0

@@ -1,0 +1,64 @@
+# Phase 3B — MI-Adam Momentum (Gradient Accumulation)
+#
+# Applies MI-FGSM-style gradient accumulation before the Adam step.  At each
+# iteration the raw gradient is L1-normalised and accumulated into a running
+# average (grad_buf ← μ * grad_buf + g / ||g||_1).  The accumulated buffer
+# replaces the raw gradient passed to Adam, so Adam still applies per-parameter
+# adaptive learning rates but on a momentum-smoothed gradient signal.
+#
+# Effect: consistent gradient directions are amplified across steps; noisy
+# one-off gradients are damped.  This is empirically useful in latent-space
+# attacks where the gradient through D∘f varies sharply across channels.
+#
+# Key change vs. baseline: use_momentum=true, momentum_decay=0.9
+# Everything else identical to phase3_baseline.
+
+# ---- detector ----
+detector:
+  weights: "runs/yolov8n_detrac/best.pt"
+  conf_thr: 0.25
+  iou_nms: 0.45
+  imgsz: 640
+
+# ---- VAE ----
+vae:
+  model_id: "stabilityai/sd-vae-ft-mse"
+  scale: 0.18215
+
+# ---- attack ----
+attack:
+  eps_z: 0.50
+  gamma: 0.05
+  lambda_p: 0.001
+  lambda_r: 1.0e-3
+  lr: 0.01
+  num_steps: 80
+  early_stop: true
+  early_stop_margin: 0.0
+  use_lpips: true
+  lpips_net: "alex"
+
+  # Phase 3B — momentum enabled
+  use_momentum: true
+  momentum_decay: 0.9    # μ; try 0.85 / 0.90 / 0.95 in sensitivity sweep
+
+  # Other Phase 3 extensions — disabled to isolate 3B
+  use_objectness: false
+  obj_weight: 0.5
+  n_restarts: 1
+  restart_noise: 0.5
+  use_ssim: false
+  ssim_weight: 0.3
+
+# ---- baselines ----
+baselines:
+  eps_pixel: 0.0314
+  pgd_steps: 50
+  pgd_alpha: 0.00392
+  mask_restricted: true
+
+# ---- runtime ----
+runtime:
+  device: "cuda"
+  dtype: "float32"
+  seed: 0

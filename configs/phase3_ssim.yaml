@@ -1,0 +1,66 @@
+# Phase 3D — LPIPS + SSIM Combined Perceptual Constraint
+#
+# Extends the perceptual loss from LPIPS-only to LPIPS + ssim_weight × SSIM.
+# Both terms are masked (only in-box pixels contribute).
+# LPIPS (AlexNet) captures feature-space similarity and is sensitive to
+# high-frequency texture changes; SSIM captures luminance, contrast, and
+# structural changes that LPIPS may overlook at low perturbation budgets.
+# Their combination provides tighter, more comprehensive perceptual grounding.
+#
+# Expected trade-off: higher LPIPS quality at the same eps_z, potentially
+# at a small cost to DFR (the perceptual constraint is slightly stronger).
+# If the DFR drop is acceptable, the visual quality improvement justifies
+# using this as the default perceptual loss in the combined config.
+#
+# Key change vs. baseline: use_ssim=true, ssim_weight=0.3
+# Everything else identical to phase3_baseline.
+
+# ---- detector ----
+detector:
+  weights: "runs/yolov8n_detrac/best.pt"
+  conf_thr: 0.25
+  iou_nms: 0.45
+  imgsz: 640
+
+# ---- VAE ----
+vae:
+  model_id: "stabilityai/sd-vae-ft-mse"
+  scale: 0.18215
+
+# ---- attack ----
+attack:
+  eps_z: 0.50
+  gamma: 0.05
+  lambda_p: 0.001
+  lambda_r: 1.0e-3
+  lr: 0.01
+  num_steps: 80
+  early_stop: true
+  early_stop_margin: 0.0
+  use_lpips: true
+  lpips_net: "alex"
+
+  # Phase 3D — SSIM added on top of LPIPS
+  use_ssim: true
+  ssim_weight: 0.3       # L_perc = L_LPIPS + 0.3 * L_SSIM
+
+  # Other Phase 3 extensions — disabled to isolate 3D
+  use_objectness: false
+  obj_weight: 0.5
+  use_momentum: false
+  momentum_decay: 0.9
+  n_restarts: 1
+  restart_noise: 0.5
+
+# ---- baselines ----
+baselines:
+  eps_pixel: 0.0314
+  pgd_steps: 50
+  pgd_alpha: 0.00392
+  mask_restricted: true
+
+# ---- runtime ----
+runtime:
+  device: "cuda"
+  dtype: "float32"
+  seed: 0

@@ -1,0 +1,68 @@
+# Phase 3 — Combined (3A + 3B + 3C + 3D)
+#
+# All four Phase 3 improvements active simultaneously:
+#   3A — Objectness-aware vanishing loss (use_objectness=true, obj_weight=0.5)
+#   3B — MI-Adam momentum accumulation   (use_momentum=true, μ=0.9)
+#   3C — Multi-restart (n_restarts=3)    (~3x compute vs. baseline)
+#   3D — LPIPS + SSIM perceptual loss    (use_ssim=true, ssim_weight=0.3)
+#
+# This is the "best achievable" configuration.  Compare against phase3_baseline
+# and each individual improvement to understand which gains are additive vs.
+# redundant and to identify the dominant contributor to any DFR improvement.
+#
+# Estimated time: ~3x that of phase3_restart alone (~9x vs. phase3_baseline)
+# due to multi-restart.  Run on 30 frames for the full ablation table.
+
+# ---- detector ----
+detector:
+  weights: "runs/yolov8n_detrac/best.pt"
+  conf_thr: 0.25
+  iou_nms: 0.45
+  imgsz: 640
+
+# ---- VAE ----
+vae:
+  model_id: "stabilityai/sd-vae-ft-mse"
+  scale: 0.18215
+
+# ---- attack ----
+attack:
+  eps_z: 0.50
+  gamma: 0.05
+  lambda_p: 0.001
+  lambda_r: 1.0e-3
+  lr: 0.01
+  num_steps: 80
+  early_stop: true
+  early_stop_margin: 0.0
+  use_lpips: true
+  lpips_net: "alex"
+
+  # Phase 3A
+  use_objectness: true
+  obj_weight: 0.5
+
+  # Phase 3B
+  use_momentum: true
+  momentum_decay: 0.9
+
+  # Phase 3C
+  n_restarts: 3
+  restart_noise: 0.5
+
+  # Phase 3D
+  use_ssim: true
+  ssim_weight: 0.3
+
+# ---- baselines ----
+baselines:
+  eps_pixel: 0.0314
+  pgd_steps: 50
+  pgd_alpha: 0.00392
+  mask_restricted: true
+
+# ---- runtime ----
+runtime:
+  device: "cuda"
+  dtype: "float32"
+  seed: 0
