@@ -186,18 +186,19 @@ def per_frame_map_drop(
     if len(clean.boxes) == 0:
         return 0.0
 
+    # torchmetrics MeanAveragePrecision requires all tensors on CPU.
     empty_boxes = torch.zeros((0, 4), dtype=torch.float32)
     empty_scores = torch.zeros(0, dtype=torch.float32)
     empty_labels = torch.zeros(0, dtype=torch.long)
 
-    pred_boxes = adv.boxes.float() if len(adv.boxes) > 0 else empty_boxes
-    pred_scores = adv.scores.float() if len(adv.scores) > 0 else empty_scores
-    pred_labels = adv.classes.long() if len(adv.classes) > 0 else empty_labels
+    pred_boxes = adv.boxes.float().cpu() if len(adv.boxes) > 0 else empty_boxes
+    pred_scores = adv.scores.float().cpu() if len(adv.scores) > 0 else empty_scores
+    pred_labels = adv.classes.long().cpu() if len(adv.classes) > 0 else empty_labels
 
     metric = MeanAveragePrecision(iou_thresholds=[iou_thr])
     metric.update(
         preds=[{"boxes": pred_boxes, "scores": pred_scores, "labels": pred_labels}],
-        target=[{"boxes": clean.boxes.float(), "labels": clean.classes.long()}],
+        target=[{"boxes": clean.boxes.float().cpu(), "labels": clean.classes.long().cpu()}],
     )
     result = metric.compute()
     map_val = float(result["map"].item())

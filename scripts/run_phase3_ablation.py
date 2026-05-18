@@ -81,6 +81,75 @@ def _load_image(path: Path, imgsz: int, device: torch.device) -> torch.Tensor:
     return TF.to_tensor(img).unsqueeze(0).to(device)
 
 
+def _draw_boxes(img_np, dets, color, label_prefix=""):
+    """Draw bounding boxes on a HxWx3 uint8 numpy array in-place."""
+    import cv2
+    CLASS_NAMES = {0: "car", 1: "bus", 2: "van", 3: "others"}
+    for d in dets:
+        x1, y1, x2, y2 = (int(v) for v in d.box)
+        cv2.rectangle(img_np, (x1, y1), (x2, y2), color, 2)
+        label = f"{label_prefix}{CLASS_NAMES.get(d.cls, str(d.cls))} {d.score:.2f}"
+        cv2.putText(img_np, label, (x1, max(y1 - 5, 10)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1, cv2.LINE_AA)
+    return img_np
+
+
+def _save_images(
+    x_clean: torch.Tensor,
+    x_adv: torch.Tensor,
+    dets_clean,
+    dets_adv,
+    stem: str,
+    out_dir: Path,
+    dfr: float,
+    lpips_val: float,
+) -> None:
+    """Save clean image, adversarial image, and a side-by-side comparison panel."""
+    import cv2
+    import numpy as np
+
+    def tensor_to_np(t: torch.Tensor) -> np.ndarray:
+        """(1,3,H,W) float [0,1] → HxWx3 uint8 BGR."""
+        arr = (t.squeeze(0).permute(1, 2, 0).cpu().clamp(0, 1).numpy() * 255).astype(np.uint8)
+        return cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+
+    clean_bgr = tensor_to_np(x_clean)
+    adv_bgr   = tensor_to_np(x_adv)
+
+    # ── annotated copies ────────────────────────────────────────────────────
+    clean_ann = _draw_boxes(clean_bgr.copy(), dets_clean, color=(0, 255, 0),   label_prefix="")
+    adv_ann   = _draw_boxes(adv_bgr.copy(),   dets_adv,   color=(0, 0, 255),   label_prefix="")
+
+    # ── save individual images ───────────────────────────────────────────────
+    cv2.imwrite(str(out_dir / f"{stem}_clean.jpg"),  clean_ann,  [cv2.IMWRITE_JPEG_QUALITY, 95])
+    cv2.imwrite(str(out_dir / f"{stem}_adv.jpg"),    adv_ann,    [cv2.IMWRITE_JPEG_QUALITY, 95])
+
+    # ── side-by-side panel ──────────────────────────────────────────────────
+    h, w = clean_bgr.shape[:2]
+    divider = np.full((h, 4, 3), 200, dtype=np.uint8)  # grey vertical bar
+    panel = np.concatenate([clean_ann, divider, adv_ann], axis=1)
+
+    # add caption bar
+    caption_h = 28
+    caption = np.full((caption_h, panel.shape[1], 3), 30, dtype=np.uint8)
+    n_clean = len(dets_clean)
+    n_adv   = len(dets_adv)
+    txt = (f"Clean: {n_clean} det  |  Adv: {n_adv} det  |  "
+           f"DFR={dfr:+.3f}  LPIPS={lpips_val:.3f}  [{stem}]")
+    cv2.putText(caption, txt, (8, 19), cv2.FONT_HERSHEY_SIMPLEX,
+                0.5, (220, 220, 220), 1, cv2.LINE_AA)
+    panel = np.concatenate([panel, caption], axis=0)
+
+    cv2.imwrite(str(out_dir / f"{stem}_compare.jpg"), panel, [cv2.IMWRITE_JPEG_QUALITY, 95])
+
+    # ── difference heatmap (amplified ×5) ───────────────────────────────────
+    diff = cv2.absdiff(clean_bgr, adv_bgr)
+    diff_amp = cv2.applyColorMap(
+        cv2.convertScaleAbs(diff, alpha=5.0), cv2.COLORMAP_INFERNO
+    )
+    cv2.imwrite(str(out_dir / f"{stem}_diff.jpg"), diff_amp, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
+
 def _detections_to_fd(dets, device: torch.device) -> FrameDetections:
     """Convert list[Detection] → FrameDetections for metric functions."""
     if not dets:
@@ -225,6 +294,7 @@ def sweep_config(
     lpips_fn,
     resume: bool = True,
     verbose: bool = True,
+    save_images: bool = False,
 ) -> dict:
     """Run the attack for one config on all frames, return summary dict."""
     tag = config_path.stem
@@ -239,6 +309,11 @@ def sweep_config(
     config_out = output_dir / tag
     config_out.mkdir(parents=True, exist_ok=True)
     records_path = config_out / "per_frame.jsonl"
+
+    # Image output directory (only created if --save_images)
+    img_out = config_out / "images"
+    if save_images:
+        img_out.mkdir(exist_ok=True)
 
     # Load previously completed frames if --resume
     done_frames: set[str] = set()
@@ -301,6 +376,19 @@ def sweep_config(
             fout.write(json.dumps(rec) + "\n")
             fout.flush()
 
+            # ── save images if requested ─────────────────────────────────
+            if save_images:
+                _save_images(
+                    x_clean=x,
+                    x_adv=result.x_adv,
+                    dets_clean=result.detections_clean,
+                    dets_adv=D_adv,
+                    stem=stem,
+                    out_dir=img_out,
+                    dfr=dfr_val,
+                    lpips_val=lpips_val if lpips_val == lpips_val else 0.0,  # nan guard
+                )
+
             if verbose:
                 print(f"  [{tag}] {stem}  n_clean={n_clean} n_adv={n_adv} "
                       f"dfr={dfr_val:+.3f} strict={rec['dfr_strict']} "
@@ -325,7 +413,9 @@ def main() -> None:
     parser.add_argument("--resume",    action="store_true", default=True,
                         help="Skip already-processed frames (default: True)")
     parser.add_argument("--no_resume", dest="resume", action="store_false")
-    parser.add_argument("--seed",      type=int, default=0)
+    parser.add_argument("--seed",       type=int, default=0)
+    parser.add_argument("--save_images", action="store_true", default=False,
+                        help="Save clean/adv/compare/diff JPEGs per frame per config")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -405,6 +495,7 @@ def main() -> None:
                 vae=vae,
                 lpips_fn=lpips_fn,
                 resume=args.resume,
+                save_images=args.save_images,
             )
             all_summaries[tag] = summary
             _print_row(tag, summary)
