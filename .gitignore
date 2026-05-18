@@ -22,3 +22,11 @@ Thumbs.db
 # downloaded weights
 yolov8*.pt
 *.safetensors
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.pdf
+PFE_report_backup.tex
