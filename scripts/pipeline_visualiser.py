@@ -318,7 +318,7 @@ def run(frame_path: str, config_path: str, out_dir: str) -> None:
 
     fig, ax = plt.subplots(1, 1, figsize=(8, 5), facecolor="white")
     ax.imshow(tensor_to_np(x))
-    scores = [d.conf for d in D_clean]
+    scores = [d.score for d in D_clean]
     draw_detections(ax, D_clean, color=GREEN, label_prefix="car ", conf=scores, lw=2.0)
     ax.set_title(
         f"Step 0 — Clean frame  |  YOLOv8 detections: {len(D_clean)} vehicles",
@@ -447,7 +447,7 @@ def run(frame_path: str, config_path: str, out_dir: str) -> None:
     fig.subplots_adjust(wspace=0.05, left=0.02, right=0.98, top=0.82, bottom=0.06)
 
     axes[0].imshow(img_bg)
-    draw_detections(axes[0], D_clean, color=GREEN, conf=[d.conf for d in D_clean], lw=1.8)
+    draw_detections(axes[0], D_clean, color=GREEN, conf=[d.score for d in D_clean], lw=1.8)
     axes[0].set_title(
         f"Clean frame  —  {len(D_clean)} detections",
         fontsize=9, color=GREEN, fontweight="bold")
@@ -456,7 +456,7 @@ def run(frame_path: str, config_path: str, out_dir: str) -> None:
     axes[1].imshow(x_adv_np)
     if D_adv:
         draw_detections(axes[1], D_adv, color=RED,
-                        conf=[d.conf for d in D_adv], lw=1.8)
+                        conf=[d.score for d in D_adv], lw=1.8)
         det_label = f"{len(D_adv)} detections remaining"
         col = RED
     else:
@@ -572,7 +572,7 @@ def _compose_grid(img_bg, x_adv_np, M_np, Mz_np, delta_final,
     # (0,0) Clean frame + detections
     ax = ax_img((0, 0), img_bg,
                 f"(a) Clean frame  —  {len(D_clean)} detections")
-    draw_detections(ax, D_clean, GREEN, conf=[d.conf for d in D_clean], lw=1.5, fs=7)
+    draw_detections(ax, D_clean, GREEN, conf=[d.score for d in D_clean], lw=1.5, fs=7)
 
     # (0,1) Pixel mask M
     ax_img((0, 1),
@@ -629,7 +629,7 @@ def _compose_grid(img_bg, x_adv_np, M_np, Mz_np, delta_final,
     ax = fig.add_subplot(gs[2, :2])
     ax.imshow(x_adv_np)
     if D_adv:
-        draw_detections(ax, D_adv, RED, conf=[d.conf for d in D_adv], lw=1.5, fs=7)
+        draw_detections(ax, D_adv, RED, conf=[d.score for d in D_adv], lw=1.5, fs=7)
     n_adv = len(D_adv)
     title_adv = (f"(g) Adversarial frame  —  {n_adv} detections"
                  if n_adv else
