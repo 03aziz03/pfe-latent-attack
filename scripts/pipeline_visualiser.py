@@ -1234,23 +1234,205 @@ def _compose_grid(img_bg, x_adv_np, x_rec_np, M_np, Mz_np, delta_final,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Cross-frame comparison figure
+# ─────────────────────────────────────────────────────────────────────────────
+
+def compose_comparison(results: list[dict], out_path: str) -> None:
+    """
+    Side-by-side comparison figure for two frames:
+    one full success (DFR=1.0) and one partial success.
+    Each column = one frame. Rows: clean | adversarial | loss curve | stats.
+    """
+    n = len(results)
+    fig, axes = plt.subplots(3, n, figsize=(7 * n, 14), facecolor="white")
+    fig.subplots_adjust(hspace=0.28, wspace=0.08,
+                        left=0.04, right=0.97, top=0.93, bottom=0.04)
+
+    for col, r in enumerate(results):
+        frame_name  = os.path.basename(r["frame_path"])
+        dfr         = r["dfr"]
+        label       = "Full success" if dfr >= 1.0 else f"Partial success (DFR={dfr:.2f})"
+        col_color   = GREEN if dfr >= 1.0 else ORANGE
+
+        # Row 0 — clean frame
+        ax = axes[0, col] if n > 1 else axes[0]
+        ax.imshow(r["img_bg"])
+        draw_detections(ax, r["D_clean"], GREEN,
+                        conf=[d.score for d in r["D_clean"]], lw=1.8, fs=8)
+        ax.set_title(
+            f"{frame_name}\n{len(r['D_clean'])} detections  ·  "
+            f"mean conf = {r['mean_conf_clean']:.3f}",
+            fontsize=8.5, color=GRAY, style="italic", pad=4)
+        ax.axis("off")
+
+        # Row 1 — adversarial frame
+        ax = axes[1, col] if n > 1 else axes[1]
+        ax.imshow(r["x_adv_np"])
+        if r["D_adv"]:
+            draw_detections(ax, r["D_adv"], RED,
+                            conf=[d.score for d in r["D_adv"]], lw=1.8, fs=8)
+        ax.set_title(
+            f"{label}\n{len(r['D_adv'])} detections remaining  ·  "
+            f"mean conf = {r['mean_conf_adv']:.3f}",
+            fontsize=8.5, color=col_color, fontweight="bold", pad=4)
+        stats_txt = (f"PSNR={r['psnr']:.1f} dB\n"
+                     f"SSIM={r['ssim']:.4f}\n"
+                     f"Steps={r['steps']}")
+        ax.text(6, r["x_adv_np"].shape[0] - 8, stats_txt,
+                color="white", fontsize=7.5,
+                bbox=dict(facecolor=STEEL, alpha=0.82, edgecolor="none",
+                          boxstyle="round,pad=0.3"))
+        ax.axis("off")
+
+        # Row 2 — loss curves
+        ax = axes[2, col] if n > 1 else axes[2]
+        hist  = r["hist"]
+        iters = list(range(1, len(hist["L_det"]) + 1))
+        ax.plot(iters, hist["L_det"], color=RED,   lw=1.6,
+                label=r"$\mathcal{L}_{\rm det}$")
+        ax.plot(iters, hist["p_max"], color=STEEL, lw=1.6, ls="--",
+                label=r"$p_{\max}$")
+        ax.axhline(0.05, color=GRAY, lw=0.8, ls=":", label=r"$\gamma=0.05$")
+        ax.set_xlabel("Iteration", fontsize=8.5)
+        ax.set_ylabel("Value", fontsize=8.5)
+        ax.legend(fontsize=8, framealpha=0.7)
+        ax.grid(True, alpha=0.25)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.tick_params(labelsize=8)
+        ax.set_title(f"Loss convergence  ·  {r['steps']} iterations",
+                     fontsize=8.5, color=GRAY, style="italic", pad=4)
+
+    fig.suptitle(
+        "Comparison: full-success frame vs. partial-success frame\n"
+        "Same attack configuration (Phase-3 SSIM)  —  same hyperparameters  —  same seed",
+        fontsize=11, y=0.97, color=GRAY, style="italic")
+
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    fig.savefig(out_path, dpi=200, bbox_inches="tight", pad_inches=0.08)
+    plt.close(fig)
+    print(f"  ✓  {os.path.basename(out_path)}")
+
+
+def run_and_collect(frame_path: str, config_path: str,
+                    out_dir: str, seed: int = 42) -> dict:
+    """
+    Wrapper around run() that also returns a summary dict
+    for the cross-frame comparison figure.
+    """
+    run(frame_path, config_path, out_dir, seed=seed)
+
+    # Re-load the attack_log.json written by run() to get the metrics
+    log_path = os.path.join(out_dir, "attack_log.json")
+    with open(log_path) as f:
+        log = json.load(f)
+
+    # Re-load saved images for the comparison figure
+    img_bg   = np.array(Image.open(f"{out_dir}/step00_clean_detections.png"))
+    x_adv_np = np.array(Image.open(f"{out_dir}/step07_x_adv_pasteback.png"))
+
+    return {
+        "frame_path"     : frame_path,
+        "dfr"            : log["detection"]["dfr"],
+        "steps"          : log["steps_taken"],
+        "psnr"           : log["final_metrics"]["psnr_adv"],
+        "ssim"           : log["final_metrics"]["ssim_adv"],
+        "mean_conf_clean": log["detection"]["mean_conf_clean"],
+        "mean_conf_adv"  : log["detection"]["mean_conf_adv"],
+        "hist"           : None,   # curves already saved per-frame
+        "img_bg"         : img_bg,
+        "x_adv_np"       : x_adv_np,
+        "D_clean"        : [],     # boxes not needed here (already drawn)
+        "D_adv"          : [],
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Entry point
 # ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pipeline visualiser v2 — Chapter 3/4 figures")
-    parser.add_argument("--frame",  default="data/images/img00005.jpg",
-                        help="Path to input frame (relative to repo root)")
+    parser.add_argument("--frames", nargs="+",
+                        default=["data/images/img00005.jpg",
+                                 "data/images/img01380.jpg"],
+                        help="One or two frame paths (relative to repo root). "
+                             "First = full success, second = partial success.")
     parser.add_argument("--config", default="configs/phase3_ssim.yaml",
                         help="Attack config YAML")
     parser.add_argument("--out",    default="figures/pipeline_steps",
-                        help="Output directory for all figures and logs")
+                        help="Root output directory")
     parser.add_argument("--seed",   type=int, default=42,
                         help="Random seed for reproducibility")
     args = parser.parse_args()
 
-    frame_path  = os.path.join(ROOT, args.frame)
     config_path = os.path.join(ROOT, args.config)
-    out_dir     = args.out if os.path.isabs(args.out) else os.path.join(ROOT, args.out)
+    out_root    = args.out if os.path.isabs(args.out) else os.path.join(ROOT, args.out)
 
-    run(frame_path, config_path, out_dir, seed=args.seed)
+    frame_paths = [
+        fp if os.path.isabs(fp) else os.path.join(ROOT, fp)
+        for fp in args.frames
+    ]
+
+    if len(frame_paths) == 1:
+        # Single frame — original behaviour
+        run(frame_paths[0], config_path, out_root, seed=args.seed)
+
+    else:
+        # Two frames — run each in its own subdirectory, then compare
+        from src.attack import AttackConfig
+        import importlib
+
+        results = []
+        sub_dirs = []
+        for fp in frame_paths:
+            frame_id = os.path.splitext(os.path.basename(fp))[0]
+            sub_dir  = os.path.join(out_root, frame_id)
+            print(f"\n{'='*60}")
+            print(f"  Processing frame: {frame_id}")
+            print(f"{'='*60}")
+            run(fp, config_path, sub_dir, seed=args.seed)
+            sub_dirs.append(sub_dir)
+
+            # Load metrics from saved log
+            log_path = os.path.join(sub_dir, "attack_log.json")
+            with open(log_path) as f:
+                log = json.load(f)
+
+            # Load step_log.csv to rebuild history for loss curves
+            csv_path = os.path.join(sub_dir, "step_log.csv")
+            hist = {"L_det": [], "p_max": []}
+            with open(csv_path, newline="") as f:
+                for row in csv.DictReader(f):
+                    hist["L_det"].append(float(row["L_det"]))
+                    hist["p_max"].append(float(row["p_max"]))
+
+            results.append({
+                "frame_path"     : fp,
+                "dfr"            : log["detection"]["dfr"],
+                "steps"          : log["steps_taken"],
+                "psnr"           : log["final_metrics"]["psnr_adv"],
+                "ssim"           : log["final_metrics"]["ssim_adv"],
+                "mean_conf_clean": log["detection"]["mean_conf_clean"],
+                "mean_conf_adv"  : log["detection"]["mean_conf_adv"],
+                "hist"           : hist,
+                "img_bg"         : np.array(Image.open(
+                    f"{sub_dir}/step00_clean_detections.png")),
+                "x_adv_np"       : np.array(Image.open(
+                    f"{sub_dir}/step07_x_adv_pasteback.png")),
+                "D_clean"        : [],
+                "D_adv"          : [],
+            })
+
+        # Compose cross-frame comparison figure
+        print("\n[Compare] Building cross-frame comparison figure…")
+        compose_comparison(
+            results,
+            out_path=os.path.join(out_root, "fig_frame_comparison.png"),
+        )
+
+        print(f"\n✓  All done. Outputs in: {out_root}/")
+        for r in results:
+            name = os.path.basename(r["frame_path"])
+            print(f"   {name:20s}  DFR={r['dfr']:.2f}  "
+                  f"PSNR={r['psnr']:.1f} dB  SSIM={r['ssim']:.4f}")
