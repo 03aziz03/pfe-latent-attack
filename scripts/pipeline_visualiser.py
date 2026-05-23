@@ -287,11 +287,8 @@ def run(frame_path: str, config_path: str, out_dir: str) -> None:
 
     print("Loading YOLOv8 detector…")
     detector = YOLOv8Wrapper(
-        weights  = os.path.join(ROOT, det_cfg["weights"]),
-        conf_thr = det_cfg["conf_thr"],
-        iou_nms  = det_cfg["iou_nms"],
-        imgsz    = det_cfg["imgsz"],
-        device   = device,
+        weights = os.path.join(ROOT, det_cfg["weights"]),
+        device  = device,
     )
 
     print("Loading SD-VAE…")
