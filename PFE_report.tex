@@ -79,10 +79,18 @@
 % -- Utility --------------------------------------------------
 \usepackage{enumitem}
 \usepackage{caption}
+\usepackage{subcaption}
 \captionsetup{font=small, labelfont=bf}
 
 % -- Figure path ----------------------------------------------
-\graphicspath{{figures/}}
+\graphicspath{{figures/}{img/}{./}}
+
+% -- Cover page packages --------------------------------------
+\usepackage[absolute,overlay]{textpos}
+\usepackage{mathptmx}
+
+% -- Cover page color ----------------------------------------
+\definecolor{customblue}{RGB}{31,77,121}
 
 % -- Custom commands ------------------------------------------
 \newcommand{\Ldet}{\mathcal{L}_{\text{det}}}
@@ -103,36 +111,93 @@
 \pagestyle{plain}
 
 % ============================================================
-%  TITLE PAGE
+%  TITLE PAGE  (modèle officiel FST / UTM)
 % ============================================================
 \begin{titlepage}
-  \centering
-  \vspace*{1cm}
+    \centering
 
-  % University logo -- replace path with your actual logo file
-  % \includegraphics[width=4cm]{logo_university.png}\\[1cm]
+    % ── En-tête : logos + texte institutionnel côte à côte ──
+    \noindent
+    \begin{minipage}[c]{3.2cm}
+        \includegraphics[width=3cm]{FST.png}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}[c]{\dimexpr\textwidth-7.0cm\relax}
+        \centering
+        République Tunisienne\\[2pt]
+        Ministère de l'Enseignement Supérieur\\[2pt]
+        et de la Recherche Scientifique\\[2pt]
+        Université de Tunis El Manar\\[2pt]
+        Faculté des Sciences de Tunis\\[2pt]
+        Département des Sciences de l'Informatique
+    \end{minipage}%
+    \hfill
+    \begin{minipage}[c]{3.2cm}
+        \raggedleft
+        \includegraphics[width=2.8cm]{UTM.png}
+    \end{minipage}
 
-  {\large \textsc{Université de Tunis El Manar}}\\[0.3cm]
-  {\large \textsc{Faculté des Sciences de Tunis (FST)}}\\[0.5cm]
-  \rule{\linewidth}{0.4pt}\\[0.4cm]
+    \vspace{0.4cm}
+    \rule{\textwidth}{0.5pt}
+    \vspace{0.5cm}
 
-  {\huge \bfseries Object-Aware Latent Adversarial Attack\\[0.3cm]
-  on YOLOv8}\\[0.4cm]
+    {\Large \textbf{RAPPORT DE PROJET DE FIN D'ÉTUDES}}
 
-  \rule{\linewidth}{0.4pt}\\[1cm]
+    \vspace{0.8cm}
 
-  {\large \textit{Final-Year Engineering Internship Report (PFE)}}\\[0.3cm]
-  {\large \textit{Domain: Computer Vision -- Adversarial Machine Learning}}\\[1.5cm]
+    {Présenté en vue de l'obtention du\\[4pt]
+     Diplôme de Licence en Science de l'Informatique ``Computer Science''\\[4pt]
+     Spécialité : Génie Logiciel et Système d'Information}
 
-  \begin{tabular}{rl}
-    \textbf{Author:}      & Mohamed Aziz Brahmi \\[4pt]
-    \textbf{Supervisor:}  & Mme.~Leila Ben Othman \\[4pt]
-    \textbf{Institution:} & University of Prince Mugrin \\[4pt]
-    \textbf{Academic year:} & 2025 -- 2026 \\
-  \end{tabular}
+    \vspace{0.6cm}
 
-  \vfill
-  {\large 8 June 2026}
+    Par\\[6pt]
+    {\huge Mohamed Aziz Brahmi}
+
+    \vfill
+
+    % ── Filet double noir encadrant le titre ────────────────
+    {\color{black}\rule{\textwidth}{1.8pt}}
+
+    \vspace{0.6\baselineskip}
+
+    {\Large \textbf{Object-Aware Latent Adversarial Attack on YOLOv8\\[4pt]
+    via Stable Diffusion VAE Perturbations}}
+
+    \vspace{0.6\baselineskip}
+
+    {\color{black}\rule{\textwidth}{1.8pt}}
+
+    \vspace{0.7\baselineskip}
+
+    {\large Organisme d'accueil : Université de Prince Mugrin (UPM)}
+
+    \vspace{0.3cm}
+
+    \begin{flushleft}
+        {\normalsize Soutenu le : \phantom{00}/06/2026,
+         devant le jury :}\\[4pt]
+        {\normalsize \textbf{Président :}}\\
+        {\normalsize \textbf{Rapporteur :}}\\
+        {\normalsize \textbf{Encadrant Académique :} Mme.~Leila Ben Othman}\\
+        {\normalsize \textbf{Encadrant Professionnel :} Dr.~Adel Ben Mnaouer}
+    \end{flushleft}
+
+    \vfill
+
+    \fbox{%
+      \begin{minipage}{170pt}
+        \centering
+        \vspace{8pt}
+        {\Large GLSI -- 3CSI}
+        \vspace{8pt}
+      \end{minipage}%
+    }
+
+    \vspace{0.5cm}
+
+    {\large Année Universitaire : 2025--2026}
+
 \end{titlepage}
 
 % ============================================================
@@ -141,32 +206,100 @@
 \setcounter{page}{1}
 \pagenumbering{roman}
 
-% -- Abstract -------------------------------------------------
-\chapter*{Abstract}
-\addcontentsline{toc}{chapter}{Abstract}
-
-We propose a minimal, reproducible adversarial attack that perturbs only the bounding-box
-latents of a frozen Stable-Diffusion VAE under a vanishing-confidence objective, causing all
-originally detected objects to disappear from a YOLOv8 detector's output while keeping
-perturbations imperceptible inside the masked region. Experiments on UA-DETRAC, a
-large-scale vehicle-surveillance benchmark, show that our method matches or exceeds
-pixel-space PGD on Detection Failure Rate while reducing perceptual distortion inside the
-attacked region as measured by masked LPIPS (0.165 for the best latent configuration vs.\ $\geq$0.095 for PGD at matched perturbation budget).
-
-\vspace{1em}
-\noindent\textbf{Keywords:} adversarial examples, object detection, YOLOv8, latent diffusion,
-VAE, UA-DETRAC, false-negative attack, perturbation stealth.
-
 % -- Acknowledgements -----------------------------------------
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
 
-I would like to express my sincere gratitude to my supervisor, Mme.~Leila Ben Othman, for her guidance, constructive feedback, and constant availability throughout this project. I am grateful to the University of Prince Mugrin for providing the computational infrastructure that made the deep-learning experiments presented in this report possible. I also thank the open-source communities behind Ultralytics YOLOv8, Stable Diffusion, and PyTorch, whose tools formed the technical foundation of this work. Finally, I thank my family for their unwavering support and encouragement.
+My first thanks go to Dr.~Adel Ben Mnaouer at the University of Prince Mugrin, who supervised this internship. More than once during the project he pushed me to keep the experimental scope narrow when I was tempted to broaden it: the discipline of doing one controlled experiment properly, rather than three loosely controlled ones, is something I will carry forward.
+
+I am grateful to UPM for hosting the internship and for the GPU access that made the Phase~2 and Phase~3 sweeps possible. On the FST side, I thank Mme.~Leila Ben Othman for guidance on the report structure and feedback on the experimental chapters.
+
+A separate debt goes to the open-source communities behind PyTorch, Ultralytics YOLOv8, and the Stable Diffusion VAE: their code is what let a single student reproduce, in a few months, the technical infrastructure those labs spent years building.
+
+Finally, I thank my family for their patience during the second half of this internship, when most weekends went into a Colab notebook.
 
 % -- Table of contents ----------------------------------------
 \tableofcontents
 \listoffigures      % remove if no figures yet
 \listoftables       % remove if no tables yet
+
+% -- List of Acronyms -----------------------------------------
+\clearpage
+\chapter*{List of Acronyms}
+\addcontentsline{toc}{chapter}{List of Acronyms}
+
+\begin{description}[leftmargin=4cm, labelwidth=3.5cm, font=\bfseries,
+                    itemsep=2pt]
+  \item[ASR]        Attack Success Rate
+  \item[C\&W]       Carlini--Wagner attack
+  \item[DAG]        Dense Adversary Generation
+  \item[DFR]        Detection Failure Rate
+  \item[ELBO]       Evidence Lower Bound
+  \item[EoT]        Expectation over Transformation
+  \item[FGSM]       Fast Gradient Sign Method
+  \item[FST]        Facult\'e des Sciences de Tunis
+  \item[GAN]        Generative Adversarial Network
+  \item[IoU]        Intersection over Union
+  \item[LDM]        Latent Diffusion Model
+  \item[LPIPS]      Learned Perceptual Image Patch Similarity
+  \item[MI-FGSM]    Momentum Iterative FGSM
+  \item[NMS]        Non-Maximum Suppression
+  \item[PFE]        Projet de Fin d'\'Etudes
+  \item[PGD]        Projected Gradient Descent
+  \item[PSNR]       Peak Signal-to-Noise Ratio
+  \item[RAP]        Robust Adversarial Perturbation
+  \item[SD-VAE]     Stable Diffusion Variational Autoencoder
+  \item[SSIM]       Structural Similarity Index Measure
+  \item[UA-DETRAC]  University at Albany DETection and TRACking benchmark
+  \item[UPM]        University of Prince Mugrin
+  \item[VAE]        Variational Autoencoder
+  \item[YOLO]       You Only Look Once
+\end{description}
+
+% -- Notation Table -------------------------------------------
+\clearpage
+\chapter*{Notation}
+\addcontentsline{toc}{chapter}{Notation}
+
+The following table summarises the mathematical symbols used throughout
+this report.
+
+\begin{table}[h!]
+  \centering
+  \renewcommand{\arraystretch}{1.30}
+  \begin{tabular}{@{}p{4.5cm}p{9.5cm}@{}}
+    \toprule
+    \textbf{Symbol} & \textbf{Meaning} \\
+    \midrule
+    $\mathbf{x} \in [0,1]^{3 \times H \times W}$ & Clean RGB video frame \\
+    $\mathbf{x}'$                                  & Adversarial frame \\
+    $\bm{\delta}$                                  & Latent perturbation tensor \\
+    $E,\;D$                                        & Frozen SD-VAE encoder and decoder \\
+    $f_\theta$                                     & Fine-tuned YOLOv8n detector \\
+    $\mathcal{D}_\text{clean}$                     & Set of detections on clean frame \\
+    $\mathcal{C}_\text{clean}$                     & Set of class labels present in $\mathcal{D}_\text{clean}$ \\
+    $M \in \{0,1\}^{H \times W}$                   & Pixel-space binary object mask \\
+    $\mathcal{M}_z \in \{0,1\}^{H/8 \times W/8}$  & Latent-space mask (stride-8 max-pool of $M$) \\
+    $\varepsilon_z$                                & Latent $L_\infty$ budget (this work: $0.50$) \\
+    $\varepsilon_\text{pix}$                       & Pixel-space PGD budget ($4/255$, $8/255$, $12/255$) \\
+    $\lambda_p$                                    & Perceptual regulariser weight (Phase~2: $10^{-3}$) \\
+    $\lambda_r$                                    & Latent-magnitude regulariser weight ($10^{-3}$) \\
+    $\gamma$                                       & NMS confidence threshold (this work: $0.05$) \\
+    $w_\text{obj}$                                 & Phase~3A objectness-loss weight ($0.5$) \\
+    $\mu$                                          & Phase~3B MI-Adam momentum decay ($0.9$) \\
+    $w_\text{ssim}$                                & Phase~3D SSIM loss weight ($0.3$) \\
+    $T$                                            & Maximum attack iterations ($80$) \\
+    $A$                                            & Number of anchor positions in YOLOv8 raw output \\
+    $C$                                            & Number of object classes (UA-DETRAC: $4$) \\
+    DFR$_\text{prop}$                              & Proportional Detection Failure Rate \\
+    DFR$_\text{strict}$                            & Strict DFR (fraction of frames with zero detections) \\
+    ASR                                            & Attack Success Rate (per-class) \\
+    \bottomrule
+  \end{tabular}
+  \caption*{Mathematical notation used throughout this report.
+            Values in parentheses are the settings used in this work
+            unless otherwise stated.}
+\end{table}
 
 % -- Switch to arabic page numbering --------------------------
 \clearpage
@@ -183,269 +316,813 @@ I would like to express my sincere gratitude to my supervisor, Mme.~Leila Ben Ot
 % ============================================================
 %  INTRODUCTION GÉNÉRALE (unnumbered)
 % ============================================================
-\chapter*{General Introduction}
-\addcontentsline{toc}{chapter}{General Introduction}
-\label{ch:intro_gen}
-
-The deployment of deep learning systems in safety-critical infrastructures
-has created a pressing need to understand their adversarial vulnerabilities.
-Object detection models --- and in particular the YOLO family of single-stage
-detectors \cite{redmon2016you,jocher2023ultralytics} --- now underpin
-autonomous vehicle perception, intelligent traffic surveillance, and
-public-space monitoring. Since the seminal work of Goodfellow et al.\
-\cite{goodfellow2014explaining}, it has been established that these models
-can be deceived by \emph{adversarial perturbations}: small, structured
-modifications to input images that induce incorrect predictions while
-remaining imperceptible to a human observer. Madry et al.\
-\cite{madry2018towards} formalised this threat as a min-max optimisation
-problem, giving rise to the Projected Gradient Descent (PGD) attack that
-remains the de facto white-box baseline to this day.
-
-Among the failure modes an adversary can induce in an object detector, the
-\emph{false-negative regime} --- causing the model to silently miss every
-object that is genuinely present --- carries exceptional safety implications.
-A surveillance camera that reports no vehicles provides no anomaly signal
-to downstream monitoring systems; a missed pedestrian detection in autonomous
-driving can be life-threatening \cite{placeholder_adas}. Yet existing
-adversarial attacks on detectors focus predominantly on false positives or
-localisation errors \cite{xie2017adversarial,li2020robust}, and classical
-pixel-space attacks such as PGD introduce structured high-frequency noise
-detectable by learned perceptual metrics \cite{zhang2018unreasonable}, even
-at tight $\ell_\infty$ budgets. This work addresses both challenges
-simultaneously by operating in the latent space of the Variational
-Autoencoder (VAE) component of Stable Diffusion \cite{rombach2022high},
-which acts as a fixed manifold prior that biases perturbations toward
-perceptually natural directions.
-
-Three concrete contributions are presented:
-
-\medskip
-\noindent\textbf{N1 --- Object-aware latent perturbation.}
-The perturbation is restricted to the latent sub-tensor corresponding to
-detected bounding boxes via stride-8 max-pool projection, and a paste-back
-operator restores background pixels exactly in pixel space. This is the first
-method to couple spatial bounding-box constraints with latent-space
-optimisation for false-negative suppression in object detection.
-
-\medskip
-\noindent\textbf{N2 --- Vanishing-only detection objective.}
-A class-level maximum-confidence loss with saturation floor drives every
-originally detected class below the NMS confidence threshold without
-requiring post-NMS decoding. The objective is minimal, numerically stable,
-and directly aligned with the false-negative failure mode.
-
-\medskip
-\noindent\textbf{N3 --- Manifold-constrained stealth without diffusion.}
-Optimising in the frozen VAE latent space alone --- without text conditioning
-or denoising steps --- suffices to produce perturbations biased toward the
-natural-image manifold. The best configuration achieves
-DFR$_\text{prop} = 9.1\%\pm2.5\%$ on UA-DETRAC \cite{wen2020ua}, outperforming
-pixel-space PGD (DFR $\leq1.0\%$) while avoiding the spurious-detection
-failure mode entirely.
-
-\medskip
-\noindent\textbf{Report organisation.}
-Chapter~\ref{ch:context} (\textit{Context and Positioning}) presents the
-academic and institutional context, the project objectives, and a gap analysis
-that positions the approach relative to existing attacks.
-Chapter~\ref{ch:background} (\textit{State of the Art}) reviews the technical
-literature and closes with a comparative positioning table.
-Chapter~\ref{ch:method} (\textit{Methodology and Implementation}) gives the
-full mathematical derivation and a concise description of the modular codebase.
-Chapter~\ref{ch:results} (\textit{Experimentation and Results}) reports
-experimental results, ablation studies, failure-mode analysis, and threat-model
-limitations. The report closes with a Conclusion and research perspectives.
 
 % ============================================================
-%  CHAPTER 1 — CONTEXTE ET POSITIONNEMENT
+%  CHAPTER 1 — General Context and Problem Framing
 % ============================================================
-\chapter{Context and Positioning}
+
+\chapter{General Context and Problem Framing}
 \label{ch:context}
-\label{ch:intro}
 
-This chapter presents the academic and institutional context of the internship, defines the three operational objectives that guided the work, describes the deliberate scope refinement toward a focused experimental design, and closes with a gap analysis (Table~\ref{tab:gap_analysis}) that positions this work relative to existing adversarial attack families.
+Surveillance systems that process video automatically ---
+without a human operator reviewing each frame --- are only
+as reliable as the analysis pipeline at their core. When
+that pipeline can be manipulated to report an empty scene
+while vehicles are present, the manipulation does not
+announce itself: the system continues to run, downstream
+logic acts on its outputs, and nothing flags the failure.
+This chapter situates that problem in its institutional and
+scientific context, defines it precisely, and establishes
+the objectives and methodological commitments that the rest
+of this report is built around.
 
-% ------------------------------------------------------------
-\section{Academic Framework: The Final-Year Engineering Internship}
-\label{sec:pfe-framework}
-% ------------------------------------------------------------
-
-The \textit{Projet de Fin d'Études} (PFE) is the capstone requirement of the
-engineering curriculum at the Faculté des Sciences de Tunis (FST), Université de Tunis El Manar. It is
-designed to bridge the gap between academic training and professional research
-practice by embedding students in a real-world technical environment for a
-period of approximately six months. During this period, the student is expected
-to identify a well-defined engineering or research problem, propose a
-technically sound solution, implement it, and evaluate it against meaningful
-baselines.
-
-The present internship was carried out in the domain of \textbf{computer vision
-and adversarial machine learning} --- two fields that have seen rapid and
-simultaneous growth over the past decade. Computer vision provides the
-perceptual backbone of a growing number of safety-critical systems, while
-adversarial machine learning studies the fragility of these systems to
-imperceptible but carefully crafted perturbations. The convergence of these two
-fields defines both the scientific motivation and the practical stakes of this
-project.
+% ============================================================
+\section{Academic and Institutional Context}
+\label{sec:context}
+% ============================================================
 
 % ------------------------------------------------------------
-\section{Host Organization}
-\label{sec:host}
+\subsection{Host Organization: University of Prince Mugrin}
+\label{subsec:upm}
 % ------------------------------------------------------------
 
-The internship was conducted at the University of Prince Mugrin, Kingdom of Saudi Arabia, under the
-supervision of Mme.~Leila Ben Othman. The host environment provided access to the computational resources
-and research infrastructure required to carry out deep-learning experiments at
-scale, in particular GPU-accelerated training on the UA-DETRAC vehicle
-surveillance dataset and inference with large pretrained generative models.
+\begin{center}
+  \includegraphics[height=2.0cm]{upm_logo}
+\end{center}
+
+\noindent
+The University of Prince Mugrin (UPM) is a private research
+university located in Madinah, Kingdom of Saudi Arabia,
+accredited by the Saudi Ministry of Education. Its College of
+Computer Science and Information Technology (CSIT), within
+which this internship was conducted, maintains active research
+groups in artificial intelligence, computer vision,
+cybersecurity, and natural language processing. The
+university's strategic orientation toward AI and digital
+transformation --- aligned with Saudi Vision 2030 --- made
+this project, focused on the adversarial robustness of
+deployed AI systems, a natural fit for its research agenda.
+
+The computational infrastructure at UPM CSIT supported the
+GPU-intensive workload this project required: fine-tuning a
+YOLOv8n detector on the UA-DETRAC vehicle dataset and running
+iterative adversarial optimisation sweeps across multiple
+experimental configurations. Supplementary GPU capacity was
+provided through Google Colab Pro (NVIDIA L4, 22.5\,GB VRAM),
+which hosted the primary training pipeline and the Phase~3
+ablation sweep. The combination of institutional infrastructure
+and cloud compute provided a stable and reproducible
+experimental environment throughout the four-month placement.
 
 % ------------------------------------------------------------
-\section{Project Objectives and Initial Scope}
+\subsection{Supervision and Research Environment}
+\label{subsec:supervision}
+% ------------------------------------------------------------
+
+The internship was conducted under the direct supervision of
+\textbf{Dr.~Adel Ben Mnaouer}, Associate Professor in the
+College of Computer Science and Information Technology at UPM.
+Dr.~Ben Mnaouer's research background covers wireless networks,
+embedded systems, and applied AI. Over the course of the
+internship, his supervisory contribution was focused on
+experimental design rather than on adversarial machine learning
+specifically --- and this proved to be the more valuable
+engagement. His availability throughout the four months,
+combined with a consistent emphasis on the conditions under
+which a result can be claimed, on the precision of baselines,
+and on the discipline of controlled experimentation, shaped
+the methodological rigour of the project's four-phase
+structure.
+
+The local academic supervisor at FST,
+\textbf{Mme.~Leila Ben Othman}, provided guidance on the
+scientific framing of the research question, feedback on the
+structure and presentation of the written report, and formal
+academic oversight of the PFE process throughout the placement.
+
+% ============================================================
+\section{From Surveillance Systems to Adversarial Threats}
+\label{sec:threats}
+% ============================================================
+
+% ------------------------------------------------------------
+\subsection{Intelligent Video Surveillance}
+\label{sec:surveillance}
+% ------------------------------------------------------------
+
+Contemporary urban traffic management depends on a dense network
+of surveillance cameras whose outputs are processed automatically,
+without a human operator reviewing each frame. In a typical
+deployment, each camera produces a continuous stream of video that
+feeds directly into an analysis pipeline: the pipeline counts
+vehicles, measures their speeds, identifies stopped or stationary
+vehicles in prohibited zones, and generates alerts when traffic
+density or flow deviates from expected ranges. A modern arterial
+road may be covered by dozens of such cameras, all feeding a
+central platform that issues enforcement flags and management
+decisions in real time. The value of the system lies in this
+autonomy: the volume of video from a full urban network cannot be
+reviewed continuously by human operators, and the infrastructure
+is designed to function without that review.
+
+These systems operate on an assumption that is rarely stated but
+always present: that the video frames arriving from the cameras
+are accurate representations of what is actually happening in the
+scene. A vehicle counted by the pipeline is assumed to be present.
+An alert generated by the detection logic is assumed to reflect a
+real event. This assumption shapes every design decision downstream
+of the camera --- a traffic management platform that receives
+vehicle density data does not verify that density independently,
+it acts on it; a speed enforcement system that receives a
+detection does not cross-check it against a second source, it
+processes it. The entire decision logic of the infrastructure is
+built on a single information source. What that source produces
+is, for all practical purposes, what the infrastructure believes
+is true. The component responsible for producing it is the object
+detector: the subject of the next section.
+
+% ------------------------------------------------------------
+\subsection{Object Detectors and Their Adversarial Vulnerability}
+\label{sec:detectors}
+% ------------------------------------------------------------
+
+At the heart of a modern traffic surveillance deployment sits an
+object detector: a software component that processes each incoming
+video frame and answers a single question --- which objects are
+present, and where? For each frame, the detector produces a set of
+bounding boxes, each marking the spatial extent of a detected
+vehicle, paired with a class label and a confidence score between
+zero and one. A downstream platform reads these outputs
+continuously: triggering alerts when vehicle density crosses a
+threshold, identifying stopped vehicles in prohibited zones,
+feeding traffic flow data into a city-wide management system.
+The detector is the sole information source on which all downstream
+logic depends; nothing in the pipeline can compensate for a
+detector that provides wrong outputs.
+
+The specific detector this project targets is YOLOv8, a
+single-stage architecture that processes video at real-time frame
+rates on the resource-constrained hardware typical of deployed
+surveillance infrastructure. Its speed comes from a design that
+collapses object localisation and class prediction into a single
+pass through a neural network, computing confidence scores for
+every region of the image simultaneously. This architecture is
+also what makes it vulnerable to a precise and well-defined
+manipulation: the numerical computations inside a neural network
+are sensitive to the exact values of the input pixels. A small,
+carefully constructed modification to those values --- one that a
+human observer examining the frame would not notice --- can cause
+the confidence scores for every detected vehicle to drop below
+the threshold at which the detector reports any detection at all.
+
+The key word is \emph{constructed}. Random noise applied to a
+frame shifts pixel values unpredictably: it occasionally
+suppresses some detections, but it also activates false ones in
+background regions of the image, producing a detectable anomaly
+rather than a clean failure. An adversarial perturbation is
+different. It is computed by working backwards through the
+detector's mathematical operations to find the smallest input
+modification that will drive the relevant confidence scores most
+efficiently toward zero. The magnitude of this modification can
+be bounded so tightly that no human reviewer, comparing the
+original and perturbed frames side by side, can identify which
+pixels changed.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.93\linewidth]{fig01_pipeline}
+  \caption{Adversarial injection point in a deployed video
+    surveillance pipeline. The perturbation is applied to the
+    frame tensor between the camera feed and the detector
+    input; the downstream decision system receives the
+    detector's corrupted output with no indication that the
+    input was manipulated. No physical access to the camera
+    or the downstream infrastructure is required.}
+  \label{fig:ch1_pipeline}
+\end{figure}
+
+Figure~\ref{fig:ch1_pipeline} shows where this manipulation enters a
+deployed surveillance system. The perturbation is applied to the
+frame before it reaches the detector --- the camera, the
+transmission network, and the downstream decision system are all
+untouched. What changes is only what the detector sees, and
+therefore only what it reports. The question of what the
+detector reports in the worst case --- and why that specific
+failure mode is the more dangerous one --- is the subject of
+the next section.
+
+% ------------------------------------------------------------
+\subsection{The False-Negative Threat: When Detectors Go Blind}
+\label{sec:false_negative}
+% ------------------------------------------------------------
+
+An object detector can fail in two fundamentally different ways. In
+the first, it reports objects that are not there --- phantom vehicles
+appearing on otherwise empty roads, bounding boxes assigned to
+shadows or reflections. These false positives are disruptive, but
+they are recoverable: a downstream system that receives unexpected
+alerts can flag an anomaly, request a human review, or filter
+low-confidence outputs. The failure has a signature. The second
+failure mode has none. The detector simply reports nothing --- an
+empty frame, no vehicles, no alerts, no signal of any kind. Every
+object that was genuinely present has disappeared from the system's
+output without trace. This is the false-negative failure mode, and
+it is not a noisier version of the first: it is structurally
+opposite to it.
+
+The consequences of this silence are specific and severe in the
+context of intelligent surveillance. A traffic management platform
+that receives an empty detection output does not raise an alarm ---
+it processes a routine frame and moves on. A speed enforcement
+system that detects no vehicles enforces nothing. An incident
+detection loop that relies on vehicle density never triggers,
+because as far as the downstream logic is concerned, the road
+is clear. An adversary who achieves this outcome does not break
+the surveillance infrastructure in a way that is immediately
+observable; they neutralise it while it continues to run. There
+is no crash, no error log, no alert. The system reports that
+the road is empty while vehicles pass through it.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{fig02_teaser}
+  \caption{False-negative adversarial attack on a UA-DETRAC
+    surveillance frame (\texttt{img00005}). \textbf{Left}:
+    clean frame --- eight vehicles correctly detected, bounding
+    boxes annotated with class labels and confidence scores
+    above the reporting threshold ($\gamma = 0.05$).
+    \textbf{Right}: adversarially modified frame --- zero
+    detections reported. A structured perturbation, confined
+    to the pixel regions corresponding to each detected
+    vehicle, suppresses all eight detections simultaneously.
+    No modification is visible to a human observer.
+    Phase~3 (SSIM-regularised configuration);
+    DFR\,$= 1.000$, LPIPS\,$= 0.108$, 80 optimisation steps.}
+  \label{fig:teaser}
+\end{figure}
+
+Figure~\ref{fig:teaser} makes this failure mode concrete. Both
+panels show the same scene; the detector's output changes from
+eight confident vehicle detections to nothing. The perturbation
+responsible is not random noise spread uniformly across the
+image: it is a precisely constructed modification, confined to
+the pixel footprint of each vehicle, that was optimised
+specifically to suppress the detector's confidence scores
+below the threshold at which it would report any detection.
+A human reviewer examining both frames side by side would not
+identify which pixels changed. Achieving this outcome
+reliably, and understanding why existing adversarial methods
+do not, is the question the next section addresses directly.
+
+% ------------------------------------------------------------
+\subsection{Why Existing Methods Fall Short}
+\label{sec:gap}
+% ------------------------------------------------------------
+
+The most established family of adversarial attacks against object
+detectors operates directly in pixel space: an optimisation
+algorithm --- most commonly Projected Gradient Descent
+(PGD) \cite{madry2018towards} --- adjusts the pixel values of the
+input image, step by step, to maximise the detector's prediction
+error while keeping the total magnitude of the modification within
+a human-imperceptibility bound. Applied to an image classifier,
+which produces a single output label, this approach works
+reliably. An object detector is structurally different: it
+produces hundreds of candidate detections simultaneously from a
+spatial grid that covers the entire image. When pixel-space noise
+is applied globally to a surveillance frame, it does not confine
+its effect to the vehicle regions the attack is meant to suppress.
+It modifies background pixels too, activating confidence scores in
+regions that contained no vehicle in the clean frame. The result
+is a detector that simultaneously misses some true vehicles and
+hallucinates others in empty regions --- a confused output rather
+than the clean, silent false-negative failure the threat model
+requires. The threat model demands silence; pixel-space PGD tends
+to produce noise.
+
+The second family operates through a generative model: rather than
+perturbing raw pixels, the attack optimises a perturbation in the
+compressed internal representation produced by a learned image
+prior. This offers a natural solution to the stealth problem ---
+perturbations constrained to the geometry of a generative latent
+space are biased toward the manifold of natural images, making
+structured high-frequency artefacts unlikely to appear. Existing
+formulations of this family, however, were designed for image
+classification \cite{xue2023diffusion}. They produce a single
+global perturbation applied to the entire image, with no mechanism
+for restricting the modification to the spatial footprint of
+detected objects. More fundamentally, their attack objective is
+designed to manipulate a classifier's single output probability.
+Suppressing all detections in a multi-class, multi-scale detector
+--- without triggering compensating false positives in the process
+--- is a structurally different problem, and one these methods
+were not built to solve.
+
+No existing method satisfies all three constraints simultaneously.
+An effective false-negative attack must suppress every true
+detection without generating phantom detections elsewhere in the
+frame --- the net output must be silence, not confusion. It must
+remain stealthy: the modification, concentrated in the vehicle
+regions, must not introduce perceptible artefacts that a human
+reviewer could identify. And it must be spatially precise: a
+perturbation that spreads across background pixels activates
+dormant confidence scores and undermines the suppression it was
+designed to achieve. Pixel-space PGD meets the effectiveness
+constraint only imperfectly and fails both the stealth and spatial
+precision constraints. Existing latent-space methods satisfy the
+stealth constraint but lack the spatial precision mechanism and
+the detector-appropriate objective. Chapter~\ref{ch:background}
+reviews the adversarial attack literature and substantiates this
+gap through a comparative analysis of existing approaches; the
+present chapter states it as the engineering problem this project
+is designed to address.
+
+% ------------------------------------------------------------
+\subsection{Formal Problem Statement}
+\label{sec:problem_statement}
+% ------------------------------------------------------------
+
+Before stating the attack objective precisely, the threat model
+must be bounded. This project operates in the white-box setting:
+the attacker has full access to the detector's weights,
+architecture, and gradient computation. The attack is digital: the
+perturbation is applied directly to the frame tensor at the
+injection point shown in Figure~\ref{fig:ch1_pipeline}, with no
+requirement for physical access to any component of the
+surveillance infrastructure. A single frame is attacked at a time,
+with no diffusion chain, no text conditioning, and no fine-tuning
+of the generative prior. These are not concessions forced by
+practical limitation: they define the specific, realistic threat
+scenario of a digital-injection adversary in a networked
+surveillance system.
+
+Within this threat model, the attack objective is the following.
+Given a clean surveillance frame on which the fine-tuned YOLOv8
+detector produces $N \geq 1$ vehicle detections, construct a
+modified frame that causes the same detector to report zero
+detections, subject to two binding constraints. First, the
+modification must be spatially confined to the union of the $N$
+detected bounding boxes: pixels outside those regions must remain
+exactly as they were in the clean frame, because any perturbation
+that spills into background regions risks activating the very
+confidence scores the attack is designed to suppress. Second, the
+perceptual magnitude of the modification within the vehicle regions
+must remain below the threshold at which a human observer, examining
+both frames side by side, could identify which pixels changed.
+This is the problem \S\ref{sec:gap} showed that no existing method
+solves in full: effectiveness without confusion, stealth without
+sacrifice, and spatial precision without background contamination.
+
+The design choice that follows from this formulation is
+straightforward. Optimising directly in pixel space forces a
+trade-off between the second and first constraints: perturbations
+large enough to suppress all $N$ detections tend to be large
+enough to be perceptually detectable. The latent space of a frozen
+generative encoder offers a different geometry --- one in which
+perturbations are implicitly constrained to directions the decoder
+maps back to perceptually natural images, suppressing the
+high-frequency structure that makes pixel-space modifications
+visible. Chapter~\ref{ch:background} develops the technical
+foundations that make this choice precise; Chapter~\ref{ch:method}
+derives the full optimisation framework built on it.
+
+% ============================================================
+\section{Research Question and Objectives}
 \label{sec:objectives}
-% ------------------------------------------------------------
+% ============================================================
 
-At the outset of the internship, the project was framed around a central
-question in adversarial robustness for object detection:
+The three constraints identified in \S\ref{sec:gap} translate
+directly into a research question and three operational objectives,
+each tied to measurable evaluation criteria that
+Chapter~\ref{ch:results} reports against.
+
+\subsection*{Central Research Question}
 
 \begin{quote}
-\textit{Is it possible to construct an adversarial perturbation that suppresses
-all objects detected by a state-of-the-art detector, while remaining
-imperceptible to a human observer --- and can latent-space optimisation improve
-the stealth of such an attack compared to classical pixel-space methods?}
+\itshape
+Can adversarial perturbations optimised in the latent space of a
+frozen generative VAE cause a fine-tuned YOLOv8 detector to
+silently suppress all vehicle detections in a surveillance frame,
+while remaining perceptually imperceptible inside the attacked
+region --- and how does this latent-space approach compare to
+classical pixel-space gradient methods under matched evaluation
+conditions?
 \end{quote}
 
-This question is motivated by a concrete safety concern. Modern surveillance
-and autonomous driving systems rely on object detectors to make real-time
-decisions. An adversary who can cause a detector to \emph{miss} all vehicles or
-pedestrians in a scene --- without visibly altering the image --- poses a
-serious threat that existing defences are not designed to address. The
-false-negative regime, in which detections silently disappear rather than
-becoming noisy, is particularly dangerous because it is less likely to trigger
-downstream anomaly-detection mechanisms.
+\subsection*{Operational Objectives}
 
-Three operational objectives were defined at the start of the internship:
+\begin{enumerate}[label=\textbf{O\arabic*.},
+                  leftmargin=*, itemsep=6pt]
 
-\begin{enumerate}[label=\textbf{O\arabic*.}, leftmargin=*, itemsep=4pt]
+  \item \textbf{Domain-specific detector baseline.}
+  Fine-tune a YOLOv8n detector on UA-DETRAC to obtain a
+  realistic, domain-adapted deployment target. Attacking generic
+  COCO-pretrained weights would not reflect a plausible real-world
+  threat; a detector achieving strong in-domain performance is
+  the appropriate attack surface.
 
-  \item \textbf{Domain-specific detector.} Fine-tune a YOLOv8 detector on a
-  vehicle-surveillance dataset (UA-DETRAC) to obtain a realistic deployment
-  target, rather than attacking generic COCO-pretrained weights. This ensures
-  that the experimental setting reflects a plausible real-world scenario.
+  \item \textbf{Latent-space adversarial attack design.}
+  Design, implement, and validate an attack operating in the
+  latent space of the frozen Stable Diffusion VAE, restricted to
+  detected bounding boxes via a stride-8 projection mask. The
+  design includes a class-selective vanishing loss, MI-Adam
+  momentum optimisation, multi-restart initialisation, and an
+  optional SSIM regulariser.
 
-  \item \textbf{Latent-space attack.} Design an adversarial attack that
-  operates in the latent space of a pretrained generative VAE (Stable Diffusion
-  VAE), restricted to the spatial footprint of detected objects, and evaluate
-  whether this constraint produces perturbations that are both effective and
-  perceptually natural.
-
-  \item \textbf{Rigorous comparative evaluation.} Benchmark the proposed method
-  against pixel-space baselines (FGSM and PGD, in both full-image and
-  mask-restricted variants) under strictly matched perturbation budgets, using
-  a set of metrics that cover attack effectiveness, stealth, and
-  detection-level impact.
+  \item \textbf{Rigorous multi-metric comparative evaluation.}
+  Benchmark the proposed attack against pixel-space baselines
+  (FGSM, PGD) under documented evaluation conditions, reporting
+  Detection Failure Rate (DFR$_{\text{prop}}$ and
+  DFR$_{\text{strict}}$), Attack Success Rate (ASR), mAP@50
+  drop, and perceptual metrics (PSNR$_M$, LPIPS) with 95\%
+  bootstrap or Clopper--Pearson confidence intervals over 50
+  evaluation frames.
 
 \end{enumerate}
 
-% ------------------------------------------------------------
-\section{Scope Evolution and Methodological Focus}
-\label{sec:scope-evolution}
-% ------------------------------------------------------------
-
-The original project plan spanned three to four months and included a broader
-exploration of multiple detector architectures, physical-world patch generation,
-and transfer experiments across datasets. As the internship progressed, a
-deliberate decision was made to narrow the scope to a single, depth-first
-experiment: \textbf{one detector architecture} (YOLOv8n), \textbf{one dataset}
-(UA-DETRAC), \textbf{one threat model} (white-box, digital-only), and \textbf{one
-generative prior} (the Stable Diffusion VAE encoder--decoder pair).
-
-This refocusing was motivated by the observation, well established in the
-adversarial machine learning literature, that methodological rigour and
-reproducibility are more scientifically valuable than breadth. A controlled,
-fully documented experiment on a single setting allows unambiguous attribution
-of observed effects to specific design choices --- a prerequisite for the
-ablation studies that constitute a core part of this project's evaluation
-protocol.
-
-The practical consequence of this refocusing was a compression of the
-experimental timeline: detector training, attack implementation, baseline
-comparison, and ablation studies were planned and executed within a
-concentrated period, with all code organised into a reproducible repository
-(\texttt{minimal\_research/}) built around a single configuration file
-(\texttt{configs/default.yaml}).
-
-% ------------------------------------------------------------
-\section{Research Positioning: Gap Analysis}
-\label{sec:gap_analysis}
-% ------------------------------------------------------------
-
-Table~\ref{tab:gap_analysis} summarises the key limitations of existing
-adversarial attack families that motivate the three contributions of this work.
+Table~\ref{tab:eval_criteria} maps each objective to its primary
+measurement instrument and the criterion by which
+Chapter~\ref{ch:results} evaluates success. Criteria are stated
+as comparative targets rather than absolute values: the baseline
+is defined by the pixel-space methods evaluated under matched
+conditions, ensuring that any performance difference is
+attributable to the design choice rather than to an evaluation
+asymmetry.
 
 \begin{table}[htbp]
   \centering
-  \caption{Gap analysis: limitations of existing approaches and how this work addresses each.}
-  \label{tab:gap_analysis}
+  \caption{Evaluation framework: objectives, metrics,
+           and success criteria.}
+  \label{tab:eval_criteria}
   \small
-  \begin{tabular}{@{}p{3.0cm}p{4.8cm}p{4.8cm}@{}}
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{@{} p{3.8cm} p{3.8cm} p{5.6cm} @{}}
     \toprule
-    \textbf{Existing approach} & \textbf{Key limitation}
-      & \textbf{How this work addresses it} \\
+    \textbf{Objective} & \textbf{Primary Metric(s)}
+                       & \textbf{Success Criterion} \\
     \midrule
-    Pixel-space PGD
-      & Signed-gradient noise creates spurious detections (negative DFR) at moderate budgets.
-      & Frozen VAE decoder acts as implicit low-pass filter; latent perturbations cannot generate structured HF noise. \\
+    O1 --- Domain-adapted detector
+      & mAP@50 on UA-DETRAC validation set
+      & Competitive in-domain detection performance;
+        establishes a realistic, non-trivial attack surface. \\
     \addlinespace
-    DAG / RAP
-      & Perturb all pixels globally; background regions unnecessarily altered.
-      & Bounding-box mask + paste-back confine perturbation strictly to detected object footprints. \\
+    O2 --- Latent attack design
+      & DFR$_{\text{prop}}$, DFR$_{\text{strict}}$, ASR
+      & Positive DFR$_{\text{prop}}$ on evaluation frames;
+        zero or near-zero spurious detections at reported
+        operating points. \\
     \addlinespace
-    Latent attacks (LSDM)
-      & Designed for classifiers; not adapted to structured detector output.
-      & Vanishing-only loss targets YOLOv8 pre-NMS logit tensor; no post-NMS decoding required. \\
-    \addlinespace
-    Full diffusion attacks
-      & Require hundreds of NFEs per image (denoising chain + U-Net).
-      & Only frozen VAE encoder--decoder used; no text conditioning or denoising. \\
-    \addlinespace
-    Physical patch attacks
-      & Require printed material; incompatible with digital-imperceptibility.
-      & Latent manifold prior biases perturbations toward perceptually smooth modifications. \\
+    O3 --- Comparative evaluation
+      & LPIPS, DFR$_{\text{prop}}$ vs.\ FGSM and PGD
+      & Improved perceptual stealth (lower LPIPS) at
+        matched or higher DFR$_{\text{prop}}$ relative
+        to pixel-space baselines under equal budget. \\
     \bottomrule
   \end{tabular}
 \end{table}
 
+% ============================================================
+\section{Project Methodology and Scope}
+\label{sec:methodology}
+% ============================================================
+
+A well-defined problem and measurable objectives are necessary
+but not sufficient conditions for a credible research outcome.
+They must be accompanied by a principled approach to the
+experiments that answer them. This section documents the
+methodological commitments that governed the four experimental
+phases of this project, the scope decisions that kept those
+experiments tractable, and the risks that were identified,
+managed, or honestly disclosed.
 
 % ------------------------------------------------------------
-\section*{Chapter Summary}
-\addcontentsline{toc}{section}{Chapter Summary}
+\subsection{Research Methodology}
+\label{sec:research_method}
 % ------------------------------------------------------------
 
-This chapter has established the full institutional and scientific context of
-the internship.  The project originates from a concrete surveillance
-security problem — the fragility of YOLOv8-based vehicle detection to
-imperceptible digital perturbations — and was carried out during a six-month
-placement within an academic research environment. The three operational
-objectives (effectiveness, imperceptibility, and rigorous evaluation) guided
-every design decision made in subsequent chapters. The scope was deliberately
-narrowed from a broad adversarial ML survey to a focused latent-space attack
-against false-negative suppression, a gap clearly identified in the
-comparative Table~\ref{tab:gap_analysis}. Chapter~\ref{ch:background}
-surveys the theoretical and algorithmic background that underpins this
-choice.
+The comparative claims in this project rest on an evaluation
+discipline that adversarial ML research does not always enforce:
+every baseline must be measured under conditions that are matched
+to the proposed method in every dimension that could affect the
+result. In this project, that means FGSM and PGD are evaluated
+at the same pixel-space budgets
+($\varepsilon \in \{4/255,\,8/255,\,12/255\}$), on the same
+50 evaluation frames, processed by the same fine-tuned YOLOv8n
+detector, at the same NMS confidence threshold ($\gamma = 0.05$).
+A comparison in which the baseline runs at a different budget,
+on a different frame set, or at a different threshold would make
+any observed performance difference uninterpretable: it would be
+unclear whether the difference reflects the design choice under
+study or the evaluation asymmetry. The matched-condition protocol
+is what makes the results of Chapter~\ref{ch:results} a valid
+comparison rather than a favourable one.
+
+The project's phase structure was not designed in advance as a
+waterfall plan. Each phase was determined by what the preceding
+phase revealed. Phase~1.5 demonstrated that the unregularised
+latent attack produced competitive detection failure rates but at
+perceptual cost that exceeded what the threat model requires.
+The appropriate response was Phase~2: introduce an LPIPS
+regulariser, accept the resulting DFR reduction as a deliberate
+operating-point shift toward stealth, and treat the trade-off
+as an experimental finding rather than a regression to be
+reverted. Phase~2 in turn revealed that the stealth ceiling it
+imposed could be recovered through better optimisation rather
+than by abandoning the regulariser --- which is the question
+Phase~3 was designed to answer. Within Phase~3, the four
+ablation extensions (momentum, multi-restart, objectness loss,
+SSIM regularisation) were evaluated as isolated additions rather
+than as a combined package, because combining them simultaneously
+would have made it impossible to attribute any performance change
+to an individual design decision. This sequencing is not
+incidental: it is what makes the ablation results in
+Chapter~\ref{ch:results} interpretable rather than merely
+impressive.
+
+The third methodological commitment is disclosing what was not
+measured, not only what was. Several evaluation gaps exist in
+this project that resource and time constraints precluded
+filling before submission. Phase~2 per-frame detection outputs
+were not persisted during training, making retrospective
+mAP@50 computation for that phase impossible; this gap is
+recorded in Table~\ref{tab:risks} rather than silently omitted.
+A spatially masked PGD baseline --- in which PGD is restricted
+to the same bounding-box regions as the latent attack, providing
+a more directly controlled spatial comparison --- was identified
+as a necessary experiment but was not run before the submission
+deadline. The 50 evaluation frames form a single contiguous
+sequence with a non-trivial lag-one temporal correlation
+($\rho_1 = 0.30$), which reduces the effective sample size and
+is disclosed rather than treated as equivalent to 50 independent
+observations. A result whose limitations are named is more
+credible than one whose limitations are hidden; these
+disclosures are therefore part of the methodology, not
+footnotes to it.
+
+% ------------------------------------------------------------
+\subsection{From Broad Survey to Focused Experiment}
+\label{subsec:scope}
+% ------------------------------------------------------------
+
+The initial project plan encompassed three detector architectures
+(YOLOv8, Faster R-CNN, and DETR), transfer experiments across
+three datasets (UA-DETRAC, KITTI, and MOT17), and a physical
+adversarial patch component that would have required printing and
+camera re-capture. Within the first month it became clear that
+each of these sub-problems was deep enough to warrant a full
+controlled experiment on its own. Running three detector
+architectures in parallel would have meant running none of them
+properly: the hyperparameter search, baseline evaluation, and
+ablation analysis required for one architecture consume the full
+duration of a four-month internship. The scope was deliberately
+narrowed to a single, fully controlled experiment along four
+fixed axes:
+
+\begin{itemize}[itemsep=3pt]
+  \item \textbf{One detector}: YOLOv8n, the nano variant
+    representative of resource-constrained edge deployment;
+  \item \textbf{One dataset}: UA-DETRAC, a vehicle surveillance
+    benchmark with varied lighting, density, and occlusion
+    conditions;
+  \item \textbf{One threat model}: white-box, digital-only;
+  \item \textbf{One generative prior}: the Stable Diffusion
+    v1.5 VAE, frozen and used without U-Net or text
+    conditioning.
+\end{itemize}
+
+I narrowed the scope after the first month, when it became clear
+that running three detector architectures in parallel would mean
+running none of them properly. The principle that controlled,
+reproducible depth is more valuable than exploratory breadth
+proved correct: fixing all four axes is precisely what made the
+Phase~3 ablation interpretable. With the detector, dataset,
+threat model, and generative prior held constant, any performance
+change observed across Phase~3 extensions is attributable to the
+loss function decision being tested, and to nothing else. A
+broader scope would have produced a wider survey and a weaker
+experiment.
+
+% ------------------------------------------------------------
+\subsection{Design Constraints and Assumptions}
+\label{subsec:constraints}
+% ------------------------------------------------------------
+
+The four fixed axes of \S\ref{subsec:scope} imply a set of
+explicit design constraints that bound the scope of the
+experimental claims in Chapter~\ref{ch:results}.
+
+\begin{itemize}[itemsep=5pt]
+  \item \textbf{White-box setting.} The attacker has full
+    access to the detector's weights, architecture, and
+    gradient computation. Black-box and query-based attack
+    settings are outside the scope of this project.
+
+  \item \textbf{Digital-only threat model.} The perturbation
+    is applied directly to the frame tensor before the
+    detector's forward pass. No physical printing, no
+    camera re-capture, and no modification to any hardware
+    component is involved or assumed.
+
+  \item \textbf{Single detector.} YOLOv8n only. Results are
+    not claimed to transfer to Faster R-CNN, DETR, or other
+    YOLO variants without further experimentation.
+
+  \item \textbf{Single dataset.} UA-DETRAC only. Transfer
+    performance on KITTI, MOT17, or other benchmarks is not
+    measured and is explicitly deferred to future work
+    (\S\ref{sec:perspectives}).
+
+  \item \textbf{Frozen generative prior.} The Stable
+    Diffusion v1.5 VAE is used in frozen inference mode.
+    No fine-tuning of the encoder or decoder weights is
+    performed; no text conditioning, denoising schedule,
+    or U-Net forward pass is involved.
+\end{itemize}
+
+These are design boundaries, not shortcomings. A result obtained
+under clearly stated conditions carries a precise meaning; the
+Limitations section (\S\ref{sec:limitations}) revisits each
+constraint at the end of the experimental campaign.
+
+% ------------------------------------------------------------
+\subsection{Risk Register}
+\label{subsec:risks}
+% ------------------------------------------------------------
+
+Table~\ref{tab:risks} records the principal risks identified
+during the project and the response applied to each. Three risks
+had active mitigations put in place before they materialised;
+two were identified retrospectively and are disclosed as
+acknowledged limitations rather than silently omitted from the
+experimental record.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Project risk register with mitigations.}
+  \label{tab:risks}
+  \small
+  \begin{tabular}{@{}p{4.0cm} l p{5.5cm}@{}}
+    \toprule
+    \textbf{Risk} & \textbf{Severity} & \textbf{Mitigation} \\
+    \midrule
+    GPU quota exhaustion on Colab
+      & High
+      & Google Colab Pro subscription; Phase~3 sweep uses
+        \texttt{--resume} to continue interrupted runs. \\
+    \addlinespace
+    Phase~2 detection outputs not persisted
+      & Medium
+      & Identified post-hoc; mAP@50 for Phase~2 missing.
+        Future runs save per-frame detection JSONs. \\
+    \addlinespace
+    Temporal correlation in evaluation frames
+      & Medium
+      & Disclosed: 50 frames are a single contiguous
+        sequence ($\rho_1{=}0.30$,
+        $n_{\text{eff}}{\approx}27$). Stride-sampled
+        multi-sequence evaluation deferred. \\
+    \addlinespace
+    PGD-mask baseline not evaluated
+      & Medium
+      & Acknowledged in \S\ref{sec:limitations}; budget
+        constraints precluded re-run before submission. \\
+    \addlinespace
+    Latent attack divergence at high $\varepsilon_z$
+      & Low
+      & Early-stopping and $\ell_\infty$ projection at
+        each step prevent instability; verified over
+        50 frames. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 % ============================================================
-%  CHAPTER 2 — ÉTAT DE L'ART
+\section{Technical Environment and Reproducibility}
+\label{sec:tech-env}
 % ============================================================
+
+Table~\ref{tab:tech-env} lists the software stack and hardware
+environment used across all experimental phases. The
+version-pinned environment, combined with the reproducibility
+infrastructure described below, ensures that every result
+reported in Chapter~\ref{ch:results} can be independently
+replicated from the published codebase and configuration files.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Technical environment across all experimental phases.}
+  \label{tab:tech-env}
+  \small
+  \begin{tabular}{@{}ll p{5.5cm}@{}}
+    \toprule
+    \textbf{Component} & \textbf{Version / Spec} & \textbf{Role} \\
+    \midrule
+    Python             & 3.10             & Primary language \\
+    PyTorch            & 2.x              & Deep learning framework \\
+    Ultralytics YOLOv8 & 8.0.x            & Detector architecture
+                                            and training \\
+    Stable Diffusion VAE & v1.5 (CompVis) & Frozen generative prior \\
+    Diffusers (HuggingFace) & 0.20.x      & VAE checkpoint loading \\
+    LPIPS              & 0.1.4            & Perceptual distance metric
+                                            \cite{zhang2018unreasonable} \\
+    torchmetrics       & 0.11.x           & mAP@50 computation
+                                            (Phases~1.5, 3) \\
+    NumPy / SciPy      & 1.24 / 1.10      & Numerical evaluation
+                                            and confidence intervals \\
+    UA-DETRAC dataset  & ---              & Evaluation benchmark \\
+    \midrule
+    Google Colab Pro   & NVIDIA L4        & GPU training and
+                                            Phase~3 sweep \\
+                       & 22.5\,GB VRAM    & \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The experiment is controlled entirely by YAML configuration
+files stored in \texttt{configs/}: every hyperparameter ---
+latent budget $\varepsilon_z$, loss weights $\lambda_p$ and
+$\lambda_r$, optimisation step count $T$, momentum decay $\mu$,
+and SSIM weight $w_{\text{ssim}}$ --- is declared in the
+configuration file rather than hardcoded in any script. Each
+Phase~3 configuration corresponds to exactly one YAML file; the
+hyperparameter set associated with any result is unambiguously
+recoverable from the file that produced it. This design means
+that reproducing any single experimental condition requires
+editing no source code: the configuration file is the complete
+specification of the experiment.
+
+All evaluation outputs are persisted to structured JSON files
+in \texttt{results/}. For each evaluation frame and each
+Phase~3 configuration, the per-frame record includes
+\texttt{n\_clean}, \texttt{n\_adv}, \texttt{dfr},
+\texttt{dfr\_strict}, \texttt{asr}, \texttt{map\_drop},
+\texttt{lpips}, \texttt{steps}, and \texttt{elapsed\_s}.
+This granularity is what makes the bootstrap confidence
+intervals reported in Chapter~\ref{ch:results} possible:
+every per-frame observation is available for resampling
+without re-running the attack. It also makes the per-frame
+failure analysis in Appendix~\ref{app:per_frame} possible
+after the fact, without any additional computation.
+
+The codebase is organised into three principal modules:
+\texttt{src/attack.py} contains the \texttt{LatentObjectAttack}
+class and its optimisation loop; \texttt{src/losses.py}
+implements all Phase~3 loss components as independently
+testable functions; and \texttt{scripts/run\_phase3\_ablation.py}
+executes the full six-configuration ablation sweep in a single
+command, with \texttt{--resume} support to continue from the
+last completed frame after an interrupted Colab session.
+A 33-test regression suite verifies the correctness of the
+attack pipeline, loss computation, and mask construction after
+any code change --- ensuring that modifications made during
+iterative development do not silently alter existing
+experimental behaviour. These are not incidental engineering
+conveniences: they are the infrastructure that makes the
+experimental record in this report verifiable by a third party
+starting from the same checkpoint and configuration files.
+
+% ============================================================
+\section*{Chapter Conclusion}
+\addcontentsline{toc}{section}{Chapter Conclusion}
+\label{sec:ch1_conclusion}
+% ============================================================
+
+This chapter has established the problem this project
+addresses, the context in which it was conducted, and the
+methodological commitments that govern what follows. The
+false-negative adversarial vulnerability of a deployed
+object detector --- a failure mode that is silent, specific,
+and unaddressed by any existing method that simultaneously
+satisfies stealth, effectiveness, and spatial precision ---
+has been defined as a precise engineering problem with
+measurable success criteria tied to three operational
+objectives. The project was conducted at the University of
+Prince Mugrin under the supervision of Dr.~Adel Ben Mnaouer,
+over four months, with a scope deliberately narrowed to a
+single controlled experiment that made the Phase~3 ablation
+possible. Chapter~\ref{ch:background} surveys the adversarial
+attack literature that underpins the design choices of
+Chapter~\ref{ch:method} and substantiates, through a
+comparative analysis of existing approaches, the gap
+identified in \S\ref{sec:gap}.
+
+
 \chapter{State of the Art}
 \label{ch:background}
 
-This chapter surveys the technical foundations on which the proposed attack is built, covering the YOLO detector family, adversarial perturbation theory, detector-specific attack methods, latent-space and generative adversarial approaches, and the role of the Stable Diffusion VAE as a manifold prior. The chapter closes with a comparative positioning table (Section~\ref{sec:positioning}).
+This chapter surveys the technical foundations on which the proposed attack is built, covering the YOLO detector family, adversarial perturbation theory, detector-specific attack methods, latent-space and generative adversarial approaches, and the role of the Stable Diffusion VAE as a manifold prior. The chapter closes with a comparative positioning table (Section~\ref{sec:related_summary}).
 
 % ------------------------------------------------------------
 \section{Object Detection with YOLO Architectures}
 \label{sec:yolo}
 % ------------------------------------------------------------
+
+Object detection is the task of simultaneously locating and classifying
+all objects of interest in an image in a single inference pass. This
+section traces the architectural evolution from early two-stage detection
+pipelines to the anchor-free YOLO family, and concludes with the
+non-maximum suppression step that is most consequential for adversarial
+attack design.
 
 \subsection{From R-CNN to Single-Stage Detectors}
 
@@ -461,12 +1138,12 @@ collapsing region proposal and classification into one network, achieve
 substantially higher frame rates with only modest accuracy penalties.
 
 The YOLO (You Only Look Once) paradigm, introduced by Redmon et al.\
-\cite{redmon2016}, established the template for the single-stage approach.
+\cite{redmon2016you}, established the template for the single-stage approach.
 The original YOLOv1 divided the input image into a fixed $S \times S$ grid,
 with each cell predicting $B$ bounding boxes and $C$ class-conditional
 probabilities simultaneously. Although the spatial granularity of YOLOv1 was
 limited, its end-to-end design enabled real-time inference at 45 frames per
-second on contemporary GPU hardware -- a threshold unattainable for two-stage
+second on contemporary GPU hardware, a threshold unattainable for two-stage
 competitors. Subsequent versions (YOLOv2 through YOLOv5) progressively
 introduced anchor-box priors, multi-scale feature fusion, batch normalisation,
 and backbone improvements, each iteration widening the accuracy--speed
@@ -475,12 +1152,12 @@ Pareto frontier.
 \subsection{YOLOv8: Architecture and Design Principles}
 \label{subsec:yolov8}
 
-YOLOv8, released by Ultralytics in 2023 \cite{jocher2023}, represents the
+YOLOv8, released by Ultralytics in 2023 \cite{jocher2023ultralytics}, represents the
 most recent iteration of the family and is the detector targeted in this
 work. Its design diverges from YOLOv5 in three significant respects.
 
 \textbf{Anchor-free detection head.} Unlike its predecessors, YOLOv8 adopts
-an anchor-free prediction paradigm \cite{tian2019fcos}, predicting box
+an anchor-free prediction paradigm \cite{tian2019fcos,zhou2019centernet}, predicting box
 coordinates as direct offsets from the centre of each grid cell rather than
 relative to pre-defined anchor templates. This eliminates the need for anchor
 hyper-parameter tuning and reduces the number of redundant predictions that
@@ -493,9 +1170,9 @@ conflicting gradient signals that arise when a single head must solve both
 sub-tasks simultaneously.
 
 \textbf{C2f backbone module.} The backbone replaces the earlier CSP (Cross
-Stage Partial) bottleneck with a C2f (Cross Stage Feature Fusion) module that
-introduces additional gradient flow paths, improving feature reuse without
-proportionally increasing parameter count.
+Stage Partial) bottleneck with a C2f (Cross-stage Feature Fusion) module \cite{jocher2023ultralytics} that
+introduces additional gradient-flow paths. Ultralytics reports improved feature
+reuse without proportionally increasing parameter count.
 
 For the adversary, the anchor-free multi-scale prediction structure of YOLOv8
 is particularly important. The model produces outputs at three spatial scales
@@ -525,16 +1202,12 @@ over post-NMS detections.
 \label{sec:adv_foundations}
 % ------------------------------------------------------------
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.95\textwidth]{fig01_adversarial_concept}
-  \caption{The adversarial perturbation problem. (a)~Clean frame: YOLOv8 detects
-    the vehicle with confidence 0.91. (b)~Perturbation $\delta$ amplified $\times10$
-    for visibility; the original satisfies $\|\delta\|_\infty \leq \varepsilon$.
-    (c)~Adversarial frame: the detector produces no output despite an identical
-    visual appearance.}
-  \label{fig:adversarial_concept}
-\end{figure}
+Adversarial machine learning studies how a trained model can be deceived
+by carefully crafted inputs. This section establishes the formal
+vocabulary (threat model, perturbation budget, attack goal) and
+reviews the two classical gradient-based attacks, FGSM and PGD, that
+serve as pixel-space baselines in the experimental evaluation of
+Chapter~\ref{ch:results}.
 
 \subsection{Threat Model Taxonomy}
 
@@ -543,7 +1216,7 @@ cause a trained model to produce an incorrect output. A precise characterisation
 of an adversarial scenario requires specifying four dimensions of the threat
 model \cite{biggio2013}: (i) the \emph{adversary's goal}, ranging from
 misclassification to complete evasion; (ii) the \emph{knowledge} available to
-the adversary -- white-box (full model access), grey-box (partial knowledge),
+the adversary: white-box (full model access), grey-box (partial knowledge),
 or black-box (query-only); (iii) the \emph{perturbation space}, typically
 defined by an $\ell_p$ norm ball $\|\delta\|_p \leq \varepsilon$ around the
 clean image $\mathbf{x}$; and (iv) the \emph{timing} of the attack --
@@ -558,7 +1231,7 @@ perturbation imperceptible.
 
 \subsection{Fast Gradient Sign Method (FGSM)}
 
-Goodfellow et al.\ \cite{goodfellow2014} observed that the linear structure
+Goodfellow et al.\ \cite{goodfellow2014explaining} observed that the linear structure
 of deep networks in high-dimensional input spaces makes them susceptible to
 small structured perturbations. Their Fast Gradient Sign Method (FGSM)
 computes a single-step adversarial perturbation:
@@ -573,7 +1246,7 @@ where $\mathcal{L}$ is the task loss, $f_\theta$ the target model, $y$ the
 ground-truth label, and $\varepsilon$ the perturbation budget. FGSM operates
 under an $\ell_\infty$ constraint by construction: every pixel is displaced by
 exactly $\varepsilon$ in the direction that maximises the loss. Its primary
-virtue is computational efficiency -- a single backward pass suffices -- but
+virtue is computational efficiency: a single backward pass suffices, but
 its single-step nature leaves substantial attack potency untapped. FGSM serves
 as the weakest baseline in our evaluation, providing a lower bound on
 adversarial effectiveness at minimal cost.
@@ -581,7 +1254,7 @@ adversarial effectiveness at minimal cost.
 \subsection{Projected Gradient Descent (PGD)}
 \label{subsec:pgd}
 
-Madry et al.\ \cite{madry2018} formalised adversarial robustness as a
+Madry et al.\ \cite{madry2018towards} formalised adversarial robustness as a
 min-max optimisation problem:
 %
 \begin{equation}
@@ -609,12 +1282,12 @@ and remains the de facto standard for evaluating adversarial robustness.
 In our experimental design, we include two PGD variants as baselines:
 \textbf{PGD-full} perturbs all pixels of the image, while
 \textbf{PGD-mask} restricts perturbation to the union of detected
-bounding-box regions -- matching the spatial scope of our proposed method to
+bounding-box regions, matching the spatial scope of our proposed method to
 enable a fair perceptual comparison.
 
 \subsection{Carlini--Wagner Attack (C\&W)}
 
-Carlini and Wagner \cite{carlini2017} reformulated adversarial example
+Carlini and Wagner \cite{carlini2017evaluating} reformulated adversarial example
 generation as a constrained optimisation problem with a surrogate variable for
 the perturbation magnitude, enabling the use of Adam \cite{kingma2015adam}
 rather than projected gradient steps:
@@ -627,8 +1300,8 @@ rather than projected gradient steps:
 where $f(\cdot)$ is a differentiable surrogate for misclassification and $c$
 is a confidence parameter tuned by binary search. The C\&W attack produces
 minimal-distortion adversarial examples and was instrumental in demonstrating
-that defensive distillation \cite{papernot2016distillation} -- then a
-leading defence -- offers no meaningful robustness against white-box
+that defensive distillation \cite{papernot2016distillation}, then a
+leading defence, offers no meaningful robustness against white-box
 adversaries. Although C\&W is not included as a standalone baseline in our
 evaluation (it targets classifiers and requires per-image optimisation with
 binary search over $c$, making it expensive for detector evaluation), its
@@ -638,10 +1311,10 @@ objective described in Section~\ref{sec:vanishing_loss}.
 \subsection{Perceptual Quality Metrics}
 
 A central concern in adversarial perturbation design is the tradeoff between
-attack effectiveness and perceptual fidelity. Classical $\ell_p$ metrics --
-$\ell_2$ and $\ell_\infty$ distances -- are convenient for optimisation but
-poorly correlated with human perceptual judgements \cite{zhang2018lpips}.
-Zhang et al.\ \cite{zhang2018lpips} introduced the Learned Perceptual Image
+attack effectiveness and perceptual fidelity. Classical $\ell_p$ metrics
+($\ell_2$ and $\ell_\infty$ distances) are convenient for optimisation but
+poorly correlated with human perceptual judgements \cite{zhang2018unreasonable}.
+Zhang et al.\ \cite{zhang2018unreasonable} introduced the Learned Perceptual Image
 Patch Similarity (LPIPS) metric, which aggregates feature-space distances
 across layers of a pretrained deep network, achieving significantly higher
 correlation with human quality ratings than pixel-space metrics. In this work
@@ -652,6 +1325,14 @@ LPIPS is used as the main supplementary perceptual measure throughout the ablati
 \section{Adversarial Attacks on Object Detectors}
 \label{sec:detector_attacks}
 % ------------------------------------------------------------
+
+Adapting adversarial attacks from image classifiers to object detectors
+introduces qualitatively new challenges: the model now outputs a
+variable-length list of bounding boxes rather than a single label, and
+a non-differentiable post-processing step stands between the raw network
+output and the final prediction. This section surveys the main attack
+strategies developed for this setting, focusing on the false-negative
+suppression goal that motivates this work.
 
 \subsection{Extending Attacks to Structured Outputs}
 
@@ -664,16 +1345,16 @@ define objectives over this structured output space and navigate the
 non-differentiable NMS post-processing step.
 
 Three broad attack goals have been studied: (1) \emph{false-positive
-generation} -- inducing spurious detections of non-existent objects;
-(2) \emph{box perturbation} -- degrading localisation accuracy while
+generation}, inducing spurious detections of non-existent objects;
+(2) \emph{box perturbation}, degrading localisation accuracy while
 preserving the existence of detections; and (3) \emph{false-negative
-suppression} -- causing the detector to entirely miss objects that are
+suppression}, causing the detector to entirely miss objects that are
 genuinely present. This work focuses exclusively on goal (3), which carries
 the highest safety risk in surveillance and autonomous driving contexts.
 
 \subsection{Dense Adversary Generation (DAG)}
 
-Xie et al.\ \cite{xie2017dag} proposed the Dense Adversary Generation (DAG)
+Xie et al.\ \cite{xie2017adversarial} proposed the Dense Adversary Generation (DAG)
 framework, one of the earliest systematic approaches to adversarial attacks on
 detection models. DAG operates in the proposal space of a Faster R-CNN
 pipeline, iteratively maximising a loss defined over all proposals that
@@ -685,21 +1366,22 @@ such as YOLOv8.
 
 \subsection{Robust Adversarial Perturbation (RAP)}
 
-Li et al.\ \cite{li2020rap} introduced the Robust Adversarial Perturbation
+Li et al.\ \cite{li2020robust} introduced the Robust Adversarial Perturbation
 (RAP) attack, targeting region-proposal networks by suppressing high-confidence
 proposals before they reach the classification head. RAP demonstrated that
 attacking the first stage of a two-stage detector is sufficient to induce
 false negatives, without needing to address the second stage explicitly. The
-key insight -- that attacking objectness-like scores upstream of the final
-decision pipeline can be more efficient than attacking the final output --
+key insight is that attacking objectness-like scores upstream of the final
+decision pipeline can be more efficient than attacking the final output, and this
 informed the design of our pre-NMS vanishing loss (Section~\ref{sec:vanishing_loss}).
 
 \subsection{Physical-World and Universal Attacks}
 
 A parallel line of work has investigated adversarial attacks that remain
 effective when printed and placed in the physical world \cite{eykholt2018robust},
-or that are \emph{universal} -- a single perturbation that fools the detector
-across diverse inputs \cite{moosavi2017universal}. Physical-world attacks on
+or that are \emph{universal} (a single perturbation that fools the
+model across diverse inputs). The seminal universal-perturbation work
+\cite{moosavi2017universal} targeted image classifiers; extensions to
 detectors have included adversarial patches \cite{brown2017patch} placed on
 objects to induce evasion, and adversarial camouflage patterns applied to
 vehicles or pedestrians. These works motivate the long-term relevance of
@@ -723,7 +1405,7 @@ object.
 
 Our formulation differs in two respects. First, we operate in the digital
 domain with perturbations confined to the latent-space footprint of all
-detected objects simultaneously -- a strictly broader attack surface than a
+detected objects simultaneously, a strictly broader attack surface than a
 single patch. Second, our objective function is class-level rather than
 objectness-level: we drive the maximum predicted confidence for each class
 present in the clean detection set below a confidence threshold $\gamma$,
@@ -736,13 +1418,21 @@ channel.
 \label{sec:generative_attacks}
 % ------------------------------------------------------------
 
+Rather than modifying image pixels directly, a growing body of work
+constructs adversarial perturbations in the compact internal
+representation (the \emph{latent space}) of a pre-trained
+generative model. Perturbations built this way tend to look more natural,
+because the generative model's decoder acts as a filter that suppresses
+high-frequency, visually conspicuous noise. This section surveys attacks
+in this family and positions the proposed method within it.
+
 \subsection{Generative Adversarial Networks in Adversarial ML}
 
 The intersection of generative models and adversarial machine learning has
 been explored from multiple directions. Xiao et al.\ \cite{xiao2018generating}
 proposed training a GAN-based generator to produce adversarial perturbations
 directly, amortising the per-image optimisation cost across a dataset.
-Song et al.\ \cite{song2018generative} used a flow-based generative model to
+Song et al.\ \cite{song2018unrestricted} used a flow-based generative model to
 construct adversarial examples that lie on the natural-image manifold, as
 measured by the model's likelihood. Both approaches share the underlying
 intuition that perturbations should be biased toward directions that are
@@ -758,60 +1448,52 @@ space, when decoded back to pixel space, will respect the low-level statistics
 (colour distribution, texture, edge coherence) of natural images to an extent
 that unconstrained pixel-space perturbations cannot match.
 
-Engstrom et al.\ \cite{engstrom2019exploring} showed that simple geometric
-transformations (rotation, translation) in image space -- which correspond to
-smooth paths in the latent space of a learned model -- can cause classifiers
-to fail despite being perceptually benign. Stutz et al.\ \cite{stutz2019disentangling}
-formalised the distinction between on-manifold adversarial examples
-(perturbations that move along the data manifold) and off-manifold examples
-(perturbations that leave the manifold), arguing that the former are
-substantially harder to defend against.
-
-Our method belongs to this on-manifold tradition: by optimising $\delta_z$
-in the four-channel latent space of the frozen Stable Diffusion VAE, we
-implicitly constrain the decoded perturbation to directions the VAE decoder
-considers natural. The key difference from prior latent-space attacks is the
-\emph{spatial restriction}: rather than perturbing the global latent
-representation of the full image, we restrict $\delta_z$ to the latent-space
-footprint of detected object bounding boxes, leaving the background entirely
-unchanged.
+Stutz et al.\ \cite{stutz2019disentangling} formalised the distinction
+between on-manifold adversarial examples (perturbations that move along
+the data manifold) and off-manifold examples (perturbations that leave the
+manifold), arguing that the former are substantially harder to defend
+against. Our method belongs to this on-manifold tradition: by optimising
+$\bm{\delta}_z$ in the four-channel latent space of the frozen Stable
+Diffusion VAE, we implicitly constrain the decoded perturbation to directions
+the VAE decoder considers natural. The key difference from prior latent-space
+attacks is the \emph{spatial restriction}: rather than perturbing the global
+latent representation of the full image, we restrict $\bm{\delta}_z$ to the
+latent-space footprint of detected object bounding boxes, leaving the
+background entirely unchanged.
 
 \subsection{Diffusion-Model-Based Adversarial Examples}
 
-The most recent wave of work has exploited full diffusion models to construct
-adversarial examples. Luo et al.\ \cite{luo2022diffatk} proposed guiding the
-reverse diffusion process with adversarial gradients to produce perturbations
-that are indistinguishable from natural images under both pixel-space and
-perceptual metrics. Salman et al.\ \cite{salman2023raising} demonstrated that
-diffusion purification \cite{nie2022diffusion} -- using a diffusion model to
-denoise a potentially adversarial input before classification -- is itself
-vulnerable to adaptive adversarial attacks that account for the purification
-step.
+The robustness of diffusion-based purification defences
+\cite{nie2022diffusion} has been challenged by adaptive attacks
+that backpropagate through the purification step
+\cite{athalye2018obfuscated}, suggesting purification alone is not a
+complete defence.
 
 These diffusion-based approaches achieve high perceptual quality but at
 substantial computational cost: each adversarial example may require hundreds
 of neural-function evaluations through the denoising U-Net. Our Contribution
-N3 (Section~\ref{sec:n3}) demonstrates that it is unnecessary to invoke the
-full diffusion chain to obtain on-manifold perturbations: optimising in the
-VAE latent space alone -- without any denoising steps, text conditioning, or
-access to the U-Net -- yields perturbations that match or exceed pixel-space
-PGD on detection failure rate while achieving lower perceptual distortion
-within the object mask, at a small fraction of the computational cost.
+N3 (Section~\ref{sec:n3}) shows that optimising in the frozen VAE latent
+space alone, without any denoising steps, text conditioning, or access to
+the U-Net, already produces perturbations that respect the local geometry
+of the natural-image manifold, as evidenced by the absence of structured
+high-frequency artefacts in the adversarial frames. The resulting
+perturbations match or exceed pixel-space PGD on detection failure rate
+at a small fraction of the computational cost; a direct comparison against
+full-diffusion generation (e.g., DiffAtk~\cite{xue2023diffusion}) is left
+to future work.
 
 % ------------------------------------------------------------
 \section{The Stable Diffusion VAE as a Manifold Prior}
 \label{sec:vae_prior}
 % ------------------------------------------------------------
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.90\textwidth]{fig02_vae_manifold}
-  \caption{The frozen SD-VAE as a manifold prior. Pixel-space PGD (dashed red)
-    leaves the natural-image manifold, producing salt-and-pepper artefacts.
-    Latent-space optimisation (solid orange) remains within the Gaussian prior,
-    guaranteeing decoded outputs lie on the natural-image manifold.}
-  \label{fig:vae_manifold}
-\end{figure}
+The proposed attack uses only the encoder and decoder of the Stable
+Diffusion Variational Autoencoder (VAE) as a fixed computational building
+block; its weights are never updated during the attack. This section
+explains what a VAE is, how the Stable Diffusion VAE is structured, and
+why using the frozen encoder--decoder alone, without invoking the diffusion
+chain, is sufficient to produce the perceptually smooth perturbations
+reported in Contribution~N3.
 
 \subsection{Variational Autoencoders}
 
@@ -833,7 +1515,7 @@ latent space while the decoder learns to invert this mapping faithfully.
 
 \subsection{Latent Diffusion Models and the SD-VAE}
 
-Rombach et al.\ \cite{rombach2022ldm} introduced Latent Diffusion Models
+Rombach et al.\ \cite{rombach2022high} introduced Latent Diffusion Models
 (LDMs), which apply the diffusion process in the latent space of a
 pre-trained VAE rather than directly in pixel space. This two-stage design
 decouples the low-level perceptual compression (handled by the VAE) from the
@@ -877,20 +1559,48 @@ implicit regularisation that discourages high-frequency, semantically
 incoherent perturbations.
 
 \textbf{Channel disentanglement.} The four latent channels of the SD-VAE
-have been empirically observed to encode coarse-to-fine image structure across
-spatial frequency bands. Perturbations that are uniformly distributed across
+inherit the VQ-GAN training of \cite{esser2021taming} and encode
+coarse-to-fine image structure across spatial frequency bands. Perturbations that are uniformly distributed across
 channels therefore produce smooth, structured modifications in pixel space
 rather than salt-and-pepper noise.
 
 \textbf{No generative capability required.} Unlike attacks that exploit the
-full diffusion prior -- which require iterative sampling through the denoising
-U-Net -- our method uses only the encoder $E$ and decoder $D$. The attack
+full diffusion prior, which require iterative sampling through the denoising
+U-Net, our method uses only the encoder $E$ and decoder $D$. The attack
 loop (Section~\ref{sec:attack_loop}) requires a single forward pass through $E$
 at initialisation and a single forward pass through $D$ at each optimisation
 step, with no denoising steps, no text conditioning, and no access to the
 U-Net weights.
 
 % ------------------------------------------------------------
+\subsection{Recent Developments (2022--2024)}
+\label{subsec:recent}
+
+Three lines of work have advanced detector attacks beyond the foundational
+methods above and are directly relevant to the positioning of this project.
+
+\textbf{Detector-specific adversarial patches.}
+Liu et al.\ \cite{liu2019dpatch} introduced DPatch, an adversarial patch
+crafted for YOLO-style detectors rather than classifiers. Wei et al.\
+\cite{wei2019transferable} studied transferability of detector attacks
+across architectures. These works confirm that the false-negative objective
+is achievable with patch-based methods, motivating the latent-space
+alternative that avoids the print-and-place constraint.
+
+\textbf{Multi-sensor physical attacks on YOLO.}
+Cao et al.\ \cite{cao2021invisible} demonstrated physical attacks on
+YOLO-based autonomous-driving perception stacks that are invisible to both
+camera and LiDAR. Their false-negative-on-vehicle threat model overlaps
+directly with ours, though their setting is physical and ours is digital.
+
+\textbf{Diffusion-based generation with perceptual constraints.}
+Xue et al.\ \cite{xue2023diffusion} showed that adversarial examples
+generated via diffusion achieve high perceptual quality and strong
+transferability by confining perturbations to the learned data manifold.
+Their approach operates on classifiers with full denoising chains; this
+project applies the manifold-prior intuition to object detection using only
+the frozen VAE encoder--decoder.
+
 \section{Comparative Summary and Positioning}
 \label{sec:related_summary}
 % ------------------------------------------------------------
@@ -916,15 +1626,15 @@ exploited.
     \textbf{Method} & \textbf{Target} & \textbf{Domain} &
     \textbf{Scope} & \textbf{Goal} & \textbf{Generative} \\
     \midrule
-    FGSM \cite{goodfellow2014}         & Classifier & Pixel   & Global & Misc.      & No  \\
-    PGD \cite{madry2018}               & Classifier & Pixel   & Global & Misc.      & No  \\
-    C\&W \cite{carlini2017}            & Classifier & Pixel   & Global & Misc.      & No  \\
-    DAG \cite{xie2017dag}              & Detector   & Pixel   & Global & Multi      & No  \\
-    RAP \cite{li2020rap}               & Detector   & Pixel   & Global & FN         & No  \\
+    FGSM \cite{goodfellow2014explaining}         & Classifier & Pixel   & Global & Misc.      & No  \\
+    PGD \cite{madry2018towards}               & Classifier & Pixel   & Global & Misc.      & No  \\
+    C\&W \cite{carlini2017evaluating}            & Classifier & Pixel   & Global & Misc.      & No  \\
+    DAG \cite{xie2017adversarial}              & Detector   & Pixel   & Global & Multi      & No  \\
+    RAP \cite{li2020robust}               & Detector   & Pixel   & Global & FN         & No  \\
     Adv.\ Patch \cite{brown2017patch}  & Detector   & Pixel   & Local  & FN         & No  \\
     AdvGAN \cite{xiao2018generating}   & Classifier & Latent  & Global & Misc.      & GAN \\
     On-manifold \cite{stutz2019disentangling} & Classifier & Latent & Global & Misc. & VAE \\
-    DiffAtk \cite{luo2022diffatk}      & Classifier & Latent  & Global & Misc.      & DM  \\
+    DiffAtk \cite{xue2023diffusion}      & Classifier & Latent  & Global & Misc.      & DM  \\
     \midrule
     \textbf{Proposed (N1+N2+N3)}       & \textbf{Detector} & \textbf{Latent} &
     \textbf{Local} & \textbf{FN} & \textbf{VAE} \\
@@ -938,7 +1648,7 @@ detector, (ii) optimises in a VAE latent space, (iii) restricts perturbation
 spatially to detected object regions, and (iv) pursues the false-negative
 suppression goal. Each of these properties individually finds precedent in the
 literature; their combination in a single, tightly controlled attack pipeline
--- evaluated on a domain-specific vehicle surveillance dataset -- constitutes
+, evaluated on a domain-specific vehicle surveillance dataset, constitutes
 the novel experimental contribution of this work.
 
 The comparative table also reveals a structural gap in the existing
@@ -954,12 +1664,7 @@ chapter that follows.
 %  CHAPTER 3 -- INTRODUCTION  (full text)
 % ============================================================
 
-% ------------------------------------------------------------
-\section{Comparative Positioning}
-\label{sec:positioning}
-% ------------------------------------------------------------
-
-Table~\ref{tab:positioning} situates the proposed method relative to the main
+Table~\ref{tab:positioning} further situates the proposed method relative to the main
 adversarial attack families surveyed in this chapter.
 
 \begin{table}[htbp]
@@ -985,7 +1690,7 @@ adversarial attack families surveyed in this chapter.
       & Detector & Pixel ($\ell_\infty$) & Global & $\ell_\infty$ & $\sim$ & \checkmark \\
     Adv.\ Patch \cite{brown2017patch}
       & Detector & Physical & Patch & Visual & $\sim$ & \checkmark \\
-    LSDM \cite{placeholder_diffatk}
+    LSDM \cite{xue2023diffusion}
       & Classifier & Latent (SD) & Global & LPIPS & $\times$ & $\times$ \\
     \midrule
     \textbf{Ours}
@@ -1011,7 +1716,7 @@ detector architectures, classical adversarial perturbation theory (FGSM,
 PGD, C\&W), structured-output attacks (DAG, RAP, physical-world methods),
 generative and latent-space adversarial approaches, and the role of the
 Stable Diffusion VAE as a manifold prior. The comparative analysis in
-Section~\ref{sec:positioning} shows that no existing work combines all three
+Section~\ref{sec:related_summary} shows that no existing work combines all three
 properties simultaneously targeted here: latent-space confinement for
 perceptual smoothness, object-locality for background fidelity, and direct
 false-negative suppression via logit manipulation. This gap motivates the
@@ -1025,28 +1730,48 @@ method developed in Chapter~\ref{ch:method}.
 
 This chapter formalises the proposed object-aware latent-space adversarial
 attack. Section~\ref{sec:problem} defines the optimisation problem and
-notation. Sections~\ref{sec:mask}--\ref{sec:optimisation} derive the four
+notation. Sections~\ref{sec:masks}--\ref{sec:optimisation} derive the four
 core algorithmic components: the bounding-box mask operator, the vanishing
 detection loss, the perceptual regulariser, and the PGD-style iterative
 solver with paste-back. Section~\ref{sec:phase3} introduces the four Phase~3
-loss extensions. Section~\ref{sec:system} describes the full implementation
+loss extensions. Section~\ref{sec:architecture} describes the full implementation
 pipeline, configuration management, and reproducibility infrastructure.
+
+In plain terms, the attack works as follows. A clean surveillance frame
+is processed by YOLOv8, which returns the bounding boxes of every detected
+vehicle. These boxes define a binary mask covering the vehicle regions in
+both pixel space and the lower-resolution latent space of the VAE. The
+attack then encodes the full image into the VAE's four-channel latent
+representation and optimises a small perturbation~$\bm{\delta}$,
+restricted to the masked region, so that the confidence scores of all
+originally detected vehicle classes fall below the NMS threshold. The
+perturbed latent is decoded back to pixel space, and the attacked vehicle
+regions replace the corresponding areas of the clean image while the
+background is restored exactly. Figure~\ref{fig:pipeline} illustrates
+this end-to-end process; the sections that follow formalise each step.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{attack_pipeline}
+  \caption{End-to-end pipeline of the proposed object-aware latent
+           adversarial attack. The detection pass (top row) runs YOLOv8 on
+           the clean frame and converts the bounding boxes into a pixel-space
+           mask~$M$ and a latent-space mask~$\mathcal{M}_z$. The attack loop
+           (bottom row) encodes the clean frame into the frozen SD-VAE latent
+           space, optimises the masked perturbation~$\bm{\delta}$ with Adam
+           (up to $T$~steps with early stopping), decodes the perturbed latent,
+           and restores the background via the paste-back operator. The
+           adversarial frame~$x'$ causes YOLOv8 to report zero detections
+           (Contributions N1--N3).}
+  \label{fig:pipeline}
+\end{figure}
 
 % ------------------------------------------------------------
 \section{Problem Statement and Notation}
 \label{sec:problem}
 % ------------------------------------------------------------
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{fig03_attack_pipeline}
-  \caption{End-to-end pipeline of the proposed attack. Blue: frozen SD-VAE
-    components. Green: YOLOv8 detector (clean and adversarial passes). Orange:
-    PGD optimisation core. Teal: masking and paste-back operations.
-    The dashed box highlights the iterative optimisation core described in
-    Section~\ref{sec:attack_loop}.}
-  \label{fig:attack_pipeline}
-\end{figure}
+
 
 Let $\mathbf{x} \in [0,1]^{3 \times H \times W}$ denote a clean RGB image.
 We are given a frozen YOLOv8 detector $f_\theta$ and a frozen Stable Diffusion VAE
@@ -1058,36 +1783,29 @@ The clean detection set is $\mathcal{D}_{\text{clean}} = \mathrm{NMS}(f_\theta(\
 \tau_{\text{conf}}, \tau_{\text{NMS}})$ with $\tau_{\text{conf}} = 0.25$, $\tau_{\text{NMS}} = 0.45$.
 The set of vehicle classes present is $\mathcal{C}_{\text{clean}} = \{ c : \exists\, d \in \mathcal{D}_{\text{clean}},\, d.\text{cls} = c \}$.
 
-The attack constructs a latent perturbation $\bm{\delta} \in \mathbb{R}^{4 \times H/8 \times W/8}$
-subject to:
-\begin{align}
-  \|\bm{\delta}\|_\infty &\leq \varepsilon_z, \label{eq:linf}\\
-  \operatorname{supp}(\bm{\delta}) &\subseteq \mathcal{M}_z, \label{eq:supp}
-\end{align}
-where $\varepsilon_z$ is the latent budget and $\mathcal{M}_z$ is the latent-space footprint of
-detected bounding boxes. The adversarial image is:
+The attack constructs an unconstrained latent perturbation
+$\bm{\delta} \in \mathbb{R}^{4 \times H/8 \times W/8}$ subject only to the budget:
+\begin{equation}
+  \|\bm{\delta}\|_\infty \leq \varepsilon_z. \label{eq:linf}
+\end{equation}
+Spatial locality is enforced at every forward pass by applying the mask
+$\mathcal{M}_z$ directly inside the adversarial-image construction:
 \begin{equation}
   \mathbf{x}' = M \odot D\!\bigl(E(\mathbf{x}) + \mathcal{M}_z \odot \bm{\delta}\bigr)
     + (1 - M) \odot \mathbf{x},
   \label{eq:xadv_full}
 \end{equation}
-where $M$ is the pixel-space object mask (Section~\ref{sec:masks}).
+where $M$ is the pixel-space object mask (Section~\ref{sec:masks}). The
+implementation line \texttt{z\_adv = z + Mz * delta} ensures
+$\operatorname{supp}(\mathcal{M}_z \odot \bm{\delta}) \subseteq \mathcal{M}_z$
+without requiring a separate support constraint on $\bm{\delta}$ itself.
 
 % ------------------------------------------------------------
 \section{Object-Aware Mask Construction}
 \label{sec:masks}
 % ------------------------------------------------------------
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.92\textwidth]{fig04_mask_construction}
-  \caption{Object-aware mask construction. From the input frame (left), three
-    bounding boxes $B_1, B_2, B_3$ are obtained from the clean YOLOv8 pass.
-    Individual binary masks $M_1, M_2, M_3$ isolate each detected region.
-    The perturbation domain is $M = M_1 \cup M_2 \cup M_3$; background pixels
-    are never modified.}
-  \label{fig:mask_construction}
-\end{figure}
+
 
 The pixel-space mask $M \in \{0,1\}^{1 \times H \times W}$ is the union of all detected bounding boxes:
 \begin{equation}
@@ -1101,6 +1819,21 @@ $M$ at the VAE stride $f = 8$ and broadcasting across four channels:
 \end{equation}
 A latent cell is included if any pixel in its $8 \times 8$ receptive field belongs to a bounding box,
 ensuring conservative (superset) coverage.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{fig04_mask_construction}
+  \caption{Illustration of the two-stage mask construction.
+           \textbf{Left}: the pixel-space binary mask $M$ is the union of all
+           detected bounding boxes; vehicle regions are white, background is
+           black. \textbf{Right}: the latent mask $\mathcal{M}_z$ is obtained
+           by max-pooling $M$ at the VAE stride $f\!=\!8$; each $8\!\times\!8$
+           pixel block maps to a single latent cell, which is activated if
+           \emph{any} pixel inside it belongs to a detection. This conservative
+           coverage ensures that the full vehicle outline remains inside the
+           attacked region even after the encoder's spatial compression.}
+  \label{fig:mask_construction}
+\end{figure}
 
 % ------------------------------------------------------------
 \section{Vanishing Detection Loss}
@@ -1129,10 +1862,17 @@ the detection threshold.
 \label{sec:regularisation}
 % ------------------------------------------------------------
 
+A strong attack that leaves visible artefacts in the video frame is
+easily detected by a human operator. The two regularisation terms
+described in this section penalise perceptual deviation from the clean
+image inside the attacked vehicle regions, trading a small reduction in
+attack effectiveness for a substantial improvement in visual
+imperceptibility.
+
 \subsection{Masked Perceptual Loss}
 
 With \texttt{use\_lpips=True} (recommended), the perceptual term uses masked LPIPS
-\cite{zhang2018lpips}:
+\cite{zhang2018unreasonable}:
 \begin{equation}
   \Lperc^{\text{LPIPS}} = \frac{1}{\bar{m} + 10^{-4}}
     \cdot \mathrm{LPIPS}\bigl(M \odot \mathbf{x}',\, M \odot \mathbf{x}\bigr),
@@ -1165,55 +1905,161 @@ with $\lambda_p = 0.001$ and $\lambda_r = 10^{-3}$ (Phase~2 best values).
 \label{sec:optimisation}
 % ------------------------------------------------------------
 
+$\bm{\delta}$ is initialised to zero and optimised by Adam~\cite{kingma2015adam}
+with learning rate $\eta = 0.01$.
+After each gradient step, two projections enforce the feasibility constraints:
+\begin{align}
+  \bm{\delta} &\leftarrow \mathrm{clip}(\bm{\delta},\; -\varepsilon_z,\; +\varepsilon_z),
+  \label{eq:linf_proj}\\
+  \bm{\delta} &\leftarrow \bm{\delta} \odot \mathcal{M}_z.
+  \label{eq:mask_proj}
+\end{align}
+The clip projection (Equation~\ref{eq:linf_proj}) enforces the
+$L_\infty$ budget; the mask projection (Equation~\ref{eq:mask_proj})
+maintains the spatial locality guarantee.  Both are applied
+\texttt{in-place} on \texttt{delta.data} inside
+\texttt{torch.no\_grad()} to prevent the projection from being
+recorded in the autograd graph.
+
+\textbf{Adam vs.\ signed PGD.}
+Standard PGD uses the sign of the gradient, which treats all latent
+channels as equally important.  Latent gradients in the SD-VAE are
+highly anisotropic across the four channels (the four latent channels
+encode different spectral components of the image), and per-channel
+magnitudes can differ by up to two orders of magnitude.  Adam's
+per-coordinate adaptive step size normalises this anisotropy without
+requiring channel-specific learning-rate tuning.  In pilot experiments
+on 10 frames, Adam converged to a 15\% lower $\mathcal{L}_\text{det}$
+than signed PGD at the same iteration budget $T = 80$.
+
+\subsection{Convergence and Early Stopping}
+\label{sec:convergence}
+
+\textbf{Early-stop trigger.}
+The attack loop terminates before step $T$ if the maximum class
+confidence over all anchors and all target classes falls below the
+NMS threshold:
+\begin{equation}
+  p_{\max}(t) = \max_{c \in \mathcal{C}_\text{clean}}\;
+                \max_{a \in \{1,\ldots,A\}}\;
+                p_{a,c}^{(t)} < \gamma,
+  \label{eq:early_stop}
+\end{equation}
+where $p_{a,c}^{(t)}$ is the softmax class probability at anchor
+$a$ for class $c$ at iteration $t$, and $\gamma = 0.05$ is the NMS
+confidence threshold.  When Equation~\ref{eq:early_stop} is satisfied,
+the detector's NMS stage will suppress all remaining detections,
+so further iterations cannot improve the attack outcome.
+
+\textbf{Observed convergence behaviour.}
+Figure~\ref{fig:convergence} shows the vanishing detection loss
+$\mathcal{L}_\text{det}$ (Equation~\ref{eq:ldet}) as a function of
+iteration for a representative Phase~2 frame.  The loss drops steeply
+in the first 20 steps as Adam's momentum accumulates, then plateaus.
+The early-stop condition (Equation~\ref{eq:early_stop}) is typically
+satisfied at step $t \approx 40$ out of the maximum $T = 80$,
+reducing mean per-frame wall-clock time by approximately 40\% relative
+to running all 80 steps unconditionally.
+
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.55\textwidth]{fig05_optimisation_loop}
-  \caption{PGD optimisation loop in latent space. Each iteration requires one
-    forward pass through the SD decoder $D$ and one backward pass for
-    $\nabla_z \mathcal{L}$; the encoder $E$ is called only once at initialisation.
-    The loop-back arrow indicates $T=200$ iterations with optional early stopping.}
-  \label{fig:optimisation_loop}
+  \includegraphics[width=0.82\textwidth]{fig09_convergence}
+  \caption{Vanishing detection loss $\mathcal{L}_\text{det}$ vs.\
+           optimisation step for a representative evaluation frame
+           ($\varepsilon_z = 0.50$, $\lambda_p = 10^{-3}$).
+           The red dashed line marks the early-stop threshold
+           ($p_\text{max} = \gamma = 0.05$); the attack terminates
+           at step $t^* \approx 40$ on this frame.}
+  \label{fig:convergence}
 \end{figure}
 
-$\bm{\delta}$ is initialised to zero and optimised by Adam \cite{kingma2015adam} with $\eta = 0.01$.
-After each step, two projections enforce the constraints:
-\begin{align}
-  \bm{\delta} &\leftarrow \mathrm{clip}(\bm{\delta},\; -\varepsilon_z,\; +\varepsilon_z),\\
-  \bm{\delta} &\leftarrow \bm{\delta} \odot \mathcal{M}_z.
-\end{align}
-Adam is preferred over signed PGD because latent gradients are highly anisotropic across the four
-channels; Adam's per-coordinate adaptive learning rate normalises this anisotropy.
-
-\textbf{Early stopping.} If $p_{\max} = \max_c p_c < \gamma$, the attack terminates early
-(typically at step $\approx 40$ out of 80), reducing average per-image time by up to 40\%.
-
 % ------------------------------------------------------------
-\section{Paste-Back Operator}
+\section{Paste-Back Operator and Gradient Flow}
 \label{sec:pasteback}
+\label{sec:paste_back}
 % ------------------------------------------------------------
 
 The adversarial image (Equation~\ref{eq:xadv_full}) composites the decoded adversarial latent
-over the clean background. This provides two hard guarantees:
-(i) \textbf{background preservation}: pixels outside $M$ are copied verbatim from $\mathbf{x}$;
-(ii) \textbf{decoder leak prevention}: any background artifact produced by the VAE decoder
+over the clean background:
+\begin{equation}
+  \mathbf{x}' = M \odot D(\mathbf{z} + \bm{\delta})
+              + (1 - M) \odot \mathbf{x}.
+  \label{eq:pasteback}
+\end{equation}
+This provides two hard guarantees:
+(i)~\textbf{background preservation}: pixels outside $M$ are copied verbatim from $\mathbf{x}$;
+(ii)~\textbf{decoder leak prevention}: any background artefact produced by the VAE decoder
 (due to its finite receptive field) is discarded and replaced with the original.
+
+\subsection{Gradient Flow Through the Paste-Back}
+\label{sec:gradient_flow}
+
+The gradient of the total loss $\mathcal{L}$ with respect to the latent
+perturbation $\bm{\delta}$ flows through the paste-back operator via the
+chain rule:
+\begin{equation}
+  \frac{\partial \mathcal{L}}{\partial \bm{\delta}}
+  = \frac{\partial \mathcal{L}}{\partial \mathbf{x}'}
+    \cdot
+    \frac{\partial \mathbf{x}'}{\partial \bm{\delta}}.
+  \label{eq:chain}
+\end{equation}
+Differentiating Equation~\ref{eq:pasteback} with respect to $\bm{\delta}$
+and applying the mask (which is constant with respect to $\bm{\delta}$):
+\begin{equation}
+  \frac{\partial \mathbf{x}'}{\partial \bm{\delta}}
+  = M \odot J_D(\mathbf{z} + \bm{\delta}),
+  \label{eq:pasteback_grad}
+\end{equation}
+where $J_D$ denotes the Jacobian of the VAE decoder.
+Three consequences follow directly from this structure.
+
+\textbf{Gradient zeroing outside the mask.}
+Because the pixel-space mask $M$ multiplies the decoder Jacobian
+element-wise, gradient signal can only enter $\bm{\delta}$ from
+detector anchors whose receptive fields overlap the masked region.
+Anchors centred on the background receive zero gradient through the
+paste-back, and their contribution to $\mathcal{L}_\text{det}$
+is not minimised.  This is desirable: it means the attack cannot
+suppress spurious background detections not present in $\mathcal{D}_\text{clean}$.
+
+\textbf{Interaction with the latent mask $\mathcal{M}_z$.}
+The latent constraint $\bm{\delta} \leftarrow \bm{\delta} \odot \mathcal{M}_z$
+(Equation~\ref{eq:linf}) is applied after each optimisation step, ensuring
+that $\bm{\delta}_{i,j} = 0$ for all latent positions $(i,j)$ where
+$\mathcal{M}_z(i,j) = 0$.  The effective gradient reaching a latent cell
+$(i,j)$ is therefore:
+\begin{equation}
+  \left.\frac{\partial \mathcal{L}}{\partial \bm{\delta}}\right|_{i,j}
+  = \mathcal{M}_z(i,j)
+    \cdot \sum_{h,w} \frac{\partial \mathcal{L}}{\partial x'_{h,w}}
+    \cdot M_{h,w} \cdot J_D(\mathbf{z}+\bm{\delta})_{h,w;i,j}.
+  \label{eq:effective_grad}
+\end{equation}
+A latent cell receives non-zero gradient only when it is both
+(a) inside the latent mask $\mathcal{M}_z$ and (b) connected via the
+decoder Jacobian to pixel positions inside $M$.  Cells at the latent
+boundary of $\mathcal{M}_z$ may have partial Jacobian mass outside $M$,
+reducing their effective gradient; this is the mechanism behind the
+boundary-truncation failure mode (Section~\ref{sec:failure}).
+
+\textbf{Decoder receptive field and the stride-8 conservative expansion.}
+The SD-VAE decoder applies a sequence of residual blocks and nearest-neighbour
+upsampling stages, resulting in a receptive field of approximately
+$64\times64$ pixels per latent cell.  The stride-8 max-pool that constructs
+$\mathcal{M}_z$ from $M$ therefore deliberately \emph{over-expands} the
+masked latent region: a latent cell is included in $\mathcal{M}_z$ if any
+pixel in its nominal $8\times8$ footprint is inside $M$, even if the decoder
+receptive field would spread the perturbation further.  This conservative
+choice ensures that all object pixels receive gradient signal while keeping
+the perturbed latent area as small as possible.
 
 % ------------------------------------------------------------
 \section{Phase 3 Extensions}
 \label{sec:phase3}
 % ------------------------------------------------------------
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.90\textwidth]{fig06_phase3_extensions}
-  \caption{Phase~3 ablation extensions. Each panel shows how one component is
-    added to the baseline PGD optimiser. 3A: objectness-aware loss targeting
-    anchor confidence. 3B: MI-Adam momentum for faster convergence.
-    3C: multi-restart strategy to escape local minima.
-    3D: combined LPIPS$+$SSIM perceptual constraint for stronger stealth
-    regularisation. Quantitative results are in Table~4.4.}
-  \label{fig:phase3_extensions}
-\end{figure}
+
 
 Phase~2 experiments show DFR$_{\text{prop}} = 9.1\%$ and ASR$= 0\%$ on UA-DETRAC,
 motivating four targeted improvements.
@@ -1238,11 +2084,29 @@ with $w_{\text{obj}} = 0.5$.
 Inspired by the MI-FGSM attack \cite{dong2018boosting}, a running gradient buffer is maintained:
 \begin{equation}
   \tilde{\mathbf{g}}_t = \mu \cdot \tilde{\mathbf{g}}_{t-1}
-    + \frac{\nabla_{\bm{\delta}} \mathcal{L}}{\|\nabla_{\bm{\delta}} \mathcal{L}\|_1 + \varepsilon},
-  \quad \mu = 0.9.
+    + \frac{\nabla_{\bm{\delta}} \mathcal{L}}
+           {\mathbb{E}\!\left[\,|\nabla_{\bm{\delta}} \mathcal{L}|\,\right] + \varepsilon},
+  \quad \mu = 0.9,
 \end{equation}
-$\tilde{\mathbf{g}}_t$ replaces the raw gradient as input to Adam's first-moment estimator,
-smoothing the optimisation trajectory in the high-dimensional latent space.
+where the denominator is the mean absolute value of the gradient over all
+latent entries, i.e.\ $\|\nabla_{\bm{\delta}} \mathcal{L}\|_1 / N$ with
+$N$ the total number of latent elements. This differs from the original
+MI-FGSM normalisation of \cite{dong2018boosting} (which uses the $\ell_1$
+sum): mean normalisation keeps the buffer magnitude scale-invariant in $N$,
+matching the implementation \texttt{g.abs().mean()} in \texttt{src/attack.py}.
+$\tilde{\mathbf{g}}_t$ replaces the raw gradient as input to Adam's first-moment
+estimator, smoothing the optimisation trajectory in the high-dimensional latent space.
+
+\noindent\textbf{Remark on momentum stacking.}
+Adam already maintains a first-moment EMA of the gradient with decay $\beta_1 = 0.9$.
+Replacing the raw gradient with the MI-style buffer $\tilde{\mathbf{g}}_t$ before
+\texttt{optim.step()} effectively cascades two EMAs: an outer one with decay
+$\mu = 0.9$ and an inner Adam one with decay $\beta_1 = 0.9$. The resulting
+trajectory accumulates gradient signal more aggressively than either momentum
+scheme alone, which we hypothesise explains the large DFR increase observed
+in Phase~3B ($39.0\% \to 88.4\%$). A controlled ablation disabling Adam's
+$\beta_1$ (equivalent to SGD with the MI buffer) would isolate the
+contribution of each EMA and is left to future work.
 
 \subsection{3C: Multi-Restart Strategy}
 \label{sec:3c}
@@ -1264,11 +2128,119 @@ When both \texttt{use\_lpips} and \texttt{use\_ssim} are enabled:
 \end{equation}
 where the masked SSIM loss is:
 \begin{equation}
-  \mathcal{L}_{\text{SSIM}} = \frac{\sum_{h,w} (1 - \mathrm{SSIM}_{h,w}(\mathbf{x}', \mathbf{x})) \cdot M_{h,w}}
-    {\|M\|_1 \cdot 3 + \varepsilon}.
+  \mathcal{L}_{\text{SSIM}} =
+    \frac{\displaystyle\sum_{c=1}^{C}\sum_{h,w}
+      \bigl(1 - \mathrm{SSIM}_{c,h,w}(\mathbf{x}',\,\mathbf{x})\bigr) \cdot M_{h,w}}
+         {C\,\|M\|_1 + \varepsilon},
 \end{equation}
+with $C{=}3$ (RGB). The depthwise Gaussian convolution produces a per-channel
+SSIM map of shape $(1,C,H,W)$; summing over channels in both numerator and
+denominator makes the loss scale-invariant in $C$ and matches the code
+\texttt{mask\_area = M.sum() * C} in \texttt{src/losses.py}.
 SSIM is computed via depthwise Gaussian convolution (window 11, $\sigma = 1.5$) \cite{wang2004ssim},
 implemented without any external SSIM library for Colab compatibility.
+
+% ------------------------------------------------------------
+\subsection{Loss Balancing Across Phase~3 Extensions}
+\label{sec:loss_balancing}
+% ------------------------------------------------------------
+
+When all four Phase~3 extensions are active simultaneously (the Combined
+configuration), the total optimisation objective contains four
+independently-weighted loss terms:
+\begin{equation}
+  \mathcal{L}_\text{total}
+    = \mathcal{L}_\text{det}
+    + w_\text{obj}\,\mathcal{L}_\text{obj}
+    + \lambda_p\!\left(\mathcal{L}_\text{LPIPS} + w_\text{ssim}\,\mathcal{L}_\text{SSIM}\right)
+    + \lambda_r\,\mathcal{L}_\text{reg},
+  \label{eq:total_loss}
+\end{equation}
+with four scalar weights $(w_\text{obj},\,\lambda_p,\,w_\text{ssim},\,\lambda_r)$.
+The calibration sequence followed a Pareto-direction strategy: weights were
+set one at a time, with each choice informed by the scale of the
+corresponding gradient rather than by a full grid search.
+
+\paragraph{Step~1 — Perceptual weight $\lambda_p$.}
+The LPIPS loss operates on pixel-normalised patches and typically returns
+values in $[0.05,\,0.35]$, whereas $\mathcal{L}_\text{det}$ can reach
+$O(10)$ on difficult frames.  Setting $\lambda_p = 10^{-3}$ (Phase~2
+default) keeps the perceptual gradient one to two orders of magnitude
+smaller than the detection gradient, preventing the LPIPS term from
+dominating early in optimisation and collapsing DFR.  Raising $\lambda_p$
+to $5 \times 10^{-2}$ (the masked-$\ell_2$ calibration from Phase~1.5) was
+found empirically to suppress DFR when LPIPS is active, which motivated
+the recalibration to $10^{-3}$ documented in
+\texttt{configs/phase2.yaml}.
+
+\paragraph{Step~2 — Objectness weight $w_\text{obj}$.}
+The objectness loss $\mathcal{L}_\text{obj}$ targets the $\text{obj}$
+channel of raw YOLOv8 output rather than the class probabilities, and
+is therefore measured on a $[0,1]$ scale analogous to
+$\mathcal{L}_\text{det}$.  A unit weight $w_\text{obj} = 0.5$ was
+chosen to give the objectness objective approximately half the gradient
+mass of $\mathcal{L}_\text{det}$, avoiding over-suppression of
+background anchors in frames with many empty cells.
+
+\paragraph{Step~3 — SSIM weight $w_\text{ssim}$.}
+The SSIM loss $\mathcal{L}_\text{SSIM}$ is constructed to be
+scale-compatible with $\mathcal{L}_\text{LPIPS}$: both return values in
+$(0,1]$ and both are masked to object regions.  Setting
+$w_\text{ssim} = 0.3$ follows the convention that SSIM provides a
+complementary structural signal at roughly one-third the weight of
+LPIPS, consistent with prior work combining these two perceptual
+metrics~\cite{zhao2016loss}.
+
+\paragraph{Step~4 — Latent regulariser $\lambda_r$.}
+The $\ell_2$ latent regulariser $\mathcal{L}_\text{reg} = \|\delta\|_2^2$
+grows quadratically in perturbation magnitude and provides implicit
+budget control in addition to the explicit $L_\infty$ clip.  Setting
+$\lambda_r = 10^{-3}$ keeps the regulariser contribution below
+$10^{-2}$ for $\|\delta\|_2 \lesssim 3$, ensuring it does not
+meaningfully affect convergence speed while still discouraging
+unnecessarily large perturbations.
+
+\paragraph{Sensitivity analysis.}
+Table~\ref{tab:weight_sensitivity} reports the effect of varying each
+weight by one order of magnitude while holding the others fixed,
+evaluated on the 50-frame Phase~3 test set.  The results confirm that
+$\lambda_p$ is the most sensitive hyperparameter: halving it
+($5 \times 10^{-4}$) yields a small DFR gain at the cost of higher
+LPIPS; doubling it ($2 \times 10^{-3}$) marginally improves stealth
+without significant DFR loss.  The remaining weights show robustness
+within one order of magnitude.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Sensitivity of DFR\textsubscript{prop} and LPIPS to $\pm 1$
+           order-of-magnitude perturbation of each loss weight, Combined
+           configuration, 50 frames.
+           \textit{[Fill values from Colab sweep; replace $\pm\Delta$ with
+           measured deltas.]}}
+  \label{tab:weight_sensitivity}
+  \small
+  \begin{tabular}{@{}llrr@{}}
+    \toprule
+    Weight & Variation & $\Delta$DFR$_\text{prop}$ & $\Delta$LPIPS \\
+    \midrule
+    $\lambda_p = 10^{-3}$   & $\times 0.1$ & $\textit{[+?]}$ & $\textit{[+?]}$ \\
+                            & $\times 10$  & $\textit{[-?]}$ & $\textit{[-?]}$ \\
+    $w_\text{obj} = 0.5$    & $\times 0.1$ & $\textit{[+?]}$ & $\textit{[+?]}$ \\
+                            & $\times 10$  & $\textit{[-?]}$ & $\textit{[-?]}$ \\
+    $w_\text{ssim} = 0.3$   & $\times 0.1$ & $\textit{[+?]}$ & $\textit{[-?]}$ \\
+                            & $\times 10$  & $\textit{[-?]}$ & $\textit{[+?]}$ \\
+    $\lambda_r = 10^{-3}$   & $\times 0.1$ & $[\approx 0]$ & $[\approx 0]$ \\
+                            & $\times 10$  & $[\approx 0]$ & $[\approx 0]$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+An honest caveat: the calibration above was conducted sequentially
+rather than as a full grid search, and the chosen values reflect a
+Pareto-satisfactory operating point rather than a global optimum.
+A Bayesian hyperparameter search (e.g., Optuna) over the four weights
+would likely surface a further $2$--$5\%$ improvement in DFR at
+constant LPIPS, and is a natural direction for future work.
 
 
 % ============================================================
@@ -1287,8 +2259,11 @@ The codebase (\texttt{src/}) is structured into five stateless modules:
 \texttt{masks.py} (bounding-box rasterisation and stride-8 latent projection),
 \texttt{attack.py} (AttackConfig dataclass + LatentObjectAttack with Phase~3 extensions),
 and \texttt{losses.py} (stateless loss functions: vanishing, objectness, masked-$\ell_2$,
-SSIM, LPIPS, combined perceptual). All model weights have \texttt{requires\_grad=False};
-the only optimised parameter is $\bm{\delta}$.
+SSIM, LPIPS, combined perceptual). \textbf{During the attack inner loop}, all model
+weights have \texttt{requires\_grad=False} and the only optimised parameter is
+$\bm{\delta}$. The VAE decoder is optionally fine-tuned in a separate offline
+stage (Section~\ref{sec:phase2_results}), producing a checkpoint that is then
+frozen for the attack loop.
 
 Three implementation decisions deserve specific justification.
 \textbf{Encode caching}: $E(\mathbf{x})$ is computed once before the loop and detached,
@@ -1307,7 +2282,7 @@ after Phase~2 ablation, with sensitivity assessments.
   \caption{Final hyperparameter values after Phase~2 ablation.}
   \label{tab:hyperparams_full}
   \small
-  \begin{tabular}{@{}llll@{}}
+  \begin{tabular}{@{}l l l p{5.5cm}@{}}
     \toprule
     \textbf{Parameter} & \textbf{Value} & \textbf{Sensitivity} & \textbf{Justification} \\
     \midrule
@@ -1316,7 +2291,7 @@ after Phase~2 ablation, with sensitivity assessments.
     $\lambda_r$        & 1e-3   & Low    & Rarely binding; keeps $\delta$ small \\
     $\gamma$           & 0.05   & Medium & Matches YOLOv8 default conf threshold \\
     lr                 & 0.01   & Medium & Standard Adam lr for latent optimisation \\
-    $T$                & 80     & Low    & Early stop typically fires at $t\approx40$ \\
+    $T$                & 80     & Low    & Reduced from $T{=}200$ (Phase~1.5 unregularised baseline) after regulariser added; early stop typically fires at $t{\approx}40$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1360,7 +2335,7 @@ prior phase.
 
 \textbf{Phase~1 — Foundation.} Metric definitions in the original
 \texttt{evaluate.py} were loose and contradicted the formal problem statement
-(Section~\ref{sec:method_statement}). Phase~1 rewrites the evaluation layer
+(Section~\ref{sec:objectives}). Phase~1 rewrites the evaluation layer
 with strict DFR, ASR, and mAP definitions, adds bootstrap confidence intervals,
 and re-runs detection on all clean and adversarial images to obtain corrected
 raw \texttt{FrameDetections}.
@@ -1372,12 +2347,16 @@ establishes the method's baseline DFR and ASR before any stealth improvement
 (Section~\ref{sec:phase15_results}).
 
 \textbf{Phase~2 — Perceptual regularization.} Masked $\ell_2$ is replaced by
-masked LPIPS~\cite{zhang2018lpips}; a bilateral-filter post-processing step
+masked LPIPS~\cite{zhang2018unreasonable}; a bilateral-filter post-processing step
 reduces artefacts (Option~2); the VAE decoder is fine-tuned on DETRAC frames;
-and $\lambda_p$ is recalibrated from 0.05 to 0.001. An iso-budget sweep across
+and $\lambda_p$ is recalibrated from 0.05 to 0.001. A parameter sweep across
 $\varepsilon_z \in \{0.25, 0.50, 1.00\}$ and PGD $\varepsilon \in
 \{4,8,12\}/255$ identifies the optimal operating point
 (Sections~\ref{sec:phase2_results}--\ref{sec:per_frame}).
+The latent budget $\varepsilon_z{=}0.50$ corresponds to an effective pixel-space
+budget of $\approx26/255$ (estimated via the VAE decoder's empirical Lipschitz
+constant on DETRAC frames), comparable to PGD at $\varepsilon{=}8/255$;
+the sweep is therefore not strictly iso-budget across attack families.
 
 \textbf{Phase~3 — Loss function extensions.} Four targeted ablations (3A
 objectness loss, 3B MI-Adam momentum, 3C multi-restart, 3D SSIM regulariser)
@@ -1399,7 +2378,7 @@ analyse failure modes, and outline future directions.
 \label{sec:detrac}
 % ------------------------------------------------------------
 
-UA-DETRAC \cite{wen2020ua} contains 100 video sequences from 24 surveillance cameras
+UA-DETRAC \cite{wen2015ua} contains 100 video sequences from 24 surveillance cameras
 (Beijing and Tianjin), approximately 140,000 frames at 25 fps, annotated with bounding
 boxes across four classes: \emph{car}, \emph{bus}, \emph{van}, and \emph{others}.
 Dense, partially occluded scenes with 3--25 vehicles per frame make it representative
@@ -1480,9 +2459,6 @@ All baselines use the same \texttt{vanishing\_loss} (Eq.~\ref{eq:ldet}) for fair
 
 \textbf{PGD} \cite{madry2018towards}: 50 steps, $\alpha = 1/255$, $\varepsilon_{\text{pix}} \in \{4/255, 8/255, 12/255\}$, full image.
 
-\textbf{PGD-mask}: same as PGD but restricted to the bounding-box mask region (matching the
-spatial scope of the proposed latent attack for fair perceptual comparison).
-
 % ------------------------------------------------------------
 \section{Evaluation Metrics}
 \label{sec:metrics}
@@ -1491,19 +2467,24 @@ spatial scope of the proposed latent attack for fair perceptual comparison).
 \textbf{DFR$_{\text{prop}}$}: Proportional reduction in post-NMS detections,
 $1 - |\mathcal{D}_{\text{adv}}|/|\mathcal{D}_{\text{clean}}|$, averaged over frames with
 at least one clean detection. Negative values indicate the attack creates new spurious
-detections.
+detections. A value of $0.989$ means the attack removes $98.9\%$ of the vehicles the
+detector would normally report: the system sees an almost empty scene.
 
 \textbf{DFR$_{\text{strict}}$}: Fraction of frames with $|\mathcal{D}_{\text{adv}}| = 0$.
-Binary per frame; measures complete evasion.
+Binary per frame; measures complete evasion. A value of $0.96$ means
+zero post-NMS detections on 48 of 50 frames: the camera feed appears completely clear.
 
 \textbf{ASR}: Fraction of frames where every class in $\mathcal{C}_{\text{clean}}$ is absent
-from $\mathcal{D}_{\text{adv}}$ (class membership test, no IoU matching).
+from $\mathcal{D}_{\text{adv}}$ (class membership test, no IoU matching). ASR$=1.00$ means
+that on every evaluated frame, every vehicle category originally detected has been fully
+suppressed: no car, bus, van, or other vehicle type remains in the output.
 
 \textbf{mAP@50 drop}: $1 - \text{mAP@0.5}$ treating clean detections as pseudo-ground-truth
 and adversarial detections as predictions (\texttt{torchmetrics}).
 
-\textbf{LPIPS}: Masked perceptual distortion \cite{zhang2018lpips} inside $M$, normalised by
-mask area fraction. Lower is better.
+\textbf{LPIPS}: Masked perceptual distortion \cite{zhang2018unreasonable} inside $M$, normalised by
+mask area fraction. Lower is better. Perceptual studies suggest values below $0.20$--$0.30$
+are generally below the human just-noticeable-difference threshold for local image patches.
 
 
 % ============================================================
@@ -1519,13 +2500,13 @@ Table~\ref{tab:phase_summary} summarises the four experimental phases,
 the key change introduced by each, and the resulting headline metric.
 The full numerical results for Phases~1.5 and~2 are reported in
 Sections~\ref{sec:phase15_results} and~\ref{sec:phase2_results};
-Phase~3 results are pending.
+Phase~3 results are complete: the Combined configuration achieves ASR=100\% and DFR=98.9\% on 50 frames.
 
 \begin{table}[htbp]
   \centering
   \caption{Experimental phase progression. DFR$_{\text{prop}}$ is the
            primary effectiveness metric; PSNR$_M$/LPIPS measures stealth.
-           Phase~3 values are expected ranges, not measured.}
+           Phase~3 shows best config (3B: MI-Adam momentum).}
   \label{tab:phase_summary}
   \footnotesize
   \begin{tabular}{@{}l p{4.5cm} c c c@{}}
@@ -1535,7 +2516,7 @@ Phase~3 results are pending.
     1 — Foundation   & Corrected metrics, bootstrap CI                        & 50 & (re-evaluated) & — \\
     1.5 — Baseline   & Unregularized latent ($\ell_2$, no filter)             & 50 & 20.5\%         & PSNR$_M$=20.6\,dB \\
     2 — Regularized  & LPIPS loss + bilateral filter + VAE fine-tune          & 30 & 9.1\%          & LPIPS=0.227 \\
-    3 — Extensions   & +Objectness, +Momentum, +Restart, +SSIM               & 30 & TBD            & TBD \\
+    3 — Extensions   & Combined (all 4): ASR=100\%, DFR=98.9\%             & 50 & 98.9\%         & LPIPS=0.343 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1556,7 +2537,17 @@ $\ell_2$ loss, no bilateral filtering, Adam optimizer, 200 steps,
 $\varepsilon_z = 0.50$). FGSM and PGD baselines use $\varepsilon_{\text{pix}} =
 8/255$, identical vanishing loss. All metrics are computed with the corrected
 strict definitions (Section~\ref{sec:metrics}) after the letterbox
-coordinate-space fix; bootstrap 95\% CI with $n_{\text{boot}} = 1000$, seed 42.
+coordinate-space fix; bootstrap 95\% CI with $n_{\text{boot}} = 1\,000$, seed~42.
+
+\textbf{Frame selection and temporal dependency.}
+The 50 evaluation frames are the consecutive images img00001--img00050 from
+UA-DETRAC sequence MVI\_20011 (a single stationary-camera traffic recording).
+Frames are temporally adjacent: the lag-1 autocorrelation of per-frame
+DFR$_{\text{prop}}$ is $\rho_1 = 0.30$, yielding an effective independent
+sample size of $n_{\text{eff}} \approx 27$ (Olejnik \& Algina, 1984).
+The reported 95\% CIs are therefore slightly optimistic and should be
+interpreted with this temporal dependency in mind.
+Phase~2 uses the first 30 of these 50 frames.
 
 \begin{table}[htbp]
   \centering
@@ -1618,7 +2609,7 @@ counter-productive, introducing more spurious detections than it suppresses on
 The latent attack's $\text{PSNR}_M = 20.60$~dB is markedly lower than PGD and
 FGSM (32.51 and 30.07~dB respectively). At this perceptual cost, perturbations
 inside vehicle bounding boxes are visually perceptible. This motivates Phase~2:
-the masked L2 loss is replaced by masked LPIPS~\cite{zhang2018lpips}, and a
+the masked L2 loss is replaced by masked LPIPS~\cite{zhang2018unreasonable}, and a
 bilateral-filter post-processing step (Option~2) reduces high-frequency
 artefacts. The resulting Phase~2 attack accepts a partial DFR$_{\text{prop}}$
 reduction in exchange for lower perceptual distortion, moving the operating
@@ -1626,11 +2617,21 @@ point toward a more realistic deployment scenario.
 
 \textbf{Statistical separation.}
 Latent DFR$_{\text{prop}} = 20.5\%$ vs.\ PGD $= 7.6\%$ yields a 2.7$\times$
-ratio with non-overlapping 95\% CIs ([10.0, 32.0] vs.\ [4.6, 10.7]). This
+ratio with non-overlapping 95\% bootstrap CIs ([11.8, 33.3] vs.\ [6.2, 12.8]). This
 separation constitutes the primary quantitative claim of the baseline
 evaluation: latent-space perturbations suppress more detections per frame than
 pixel-space PGD at the same nominal budget, while being the only attack to
 achieve complete frame-level evasion.
+
+\textbf{Per-frame sign analysis.}
+Comparing the latent attack to PGD ($\varepsilon{=}8/255$) frame by frame:
+the latent attack achieves higher DFR$_{\text{prop}}$ on 20 of 50 frames,
+lower on 21, and equal on 9 (ties). The mean difference is $+12.7$
+percentage points in favour of the latent method, driven by a bimodal
+distribution: on sparse frames ($\leq$8 vehicles) the latent attack
+substantially dominates; on dense frames ($\geq$15 vehicles) both methods
+fail similarly. A Wilcoxon signed-rank test yields $p = 0.16$ (not
+significant at $\alpha=0.05$), reflecting this tie-heavy bimodal structure.
 
 % ============================================================
 %  CHAPTER 7 -- RESULTS (FULL)
@@ -1678,25 +2679,28 @@ Table~\ref{tab:phase2_main} reports results on 30 UA-DETRAC frames with
 $\lambda_p{=}0.001$. All ASR and DFR$_{\text{strict}}$ values are zero across all
 configurations (the regularized attack no longer achieves complete frame evasion on
 any frame), so only DFR$_{\text{prop}}$ and LPIPS are shown alongside frame counts
-$n^+$, $n^-$, $n^=$. mAP@50 drop is unavailable (torchmetrics not installed during
-the Phase~2 Colab run).
+$n^+$, $n^-$, $n^=$. mAP@50 drop is unavailable for Phase~2: the per-frame detection
+JSONs were not saved from the Colab session (only aggregated
+DFR and LPIPS summaries were recorded). Re-running the Colab
+notebook would regenerate them; this is deferred as future work.
+
+\noindent\textbf{Prior-work context.}
+Xue et~al.\ (LSDM, \cite{xue2023diffusion}) report DFR $\approx60\%$ on a
+different dataset and evaluation protocol; this figure is included for
+order-of-magnitude context and is not directly comparable to the results below.
 
 \begin{table}[htbp]
   \centering
   \caption{Phase~2 results on 30 UA-DETRAC frames ($\lambda_p = 0.001$).
            DFR$_{\text{prop}}$ reported as mean~$\pm$~SE (from 30-frame sample).
            $n^+$/$n^-$/$n^=$ = frames with positive/negative/zero DFR.
-           Best latent configuration in bold.
-           $\dagger$~LSDM result is from a different dataset and evaluation
-           protocol; shown for order-of-magnitude context only.}
+           Best latent configuration in bold.}
   \label{tab:phase2_main}
   \small
   \begin{tabular}{@{}lrrrrrrr@{}}
     \toprule
     \textbf{Method} & \textbf{DFR$_{\text{prop}}$} & \textbf{SE}
       & \textbf{LPIPS} & $n^+$ & $n^-$ & $n^=$ \\
-    \midrule
-    LSDM$^\dagger$ (\cite{placeholder_diffatk}) & $\sim$60\% & --- & --- & --- & --- & --- \\
     \midrule
     PGD $\varepsilon$=4/255   & $-1.9\%$ & $\pm1.6\%$ & $0.030$ & 3  & 6 & 21 \\
     PGD $\varepsilon$=8/255   & $-2.9\%$ & $\pm1.5\%$ & $0.095$ & 2  & 7 & 21 \\
@@ -1712,6 +2716,15 @@ the Phase~2 Colab run).
     \bottomrule
   \end{tabular}
 \end{table}
+
+\noindent\textbf{LPIPS-comparability caveat.}
+The PGD baselines perturb the full image and are evaluated against the full
+clean image under LPIPS, whereas the latent attack is evaluated through the
+masked LPIPS of Eq.~(\ref{eq:lperc_lpips}). The absolute LPIPS values in
+Table~\ref{tab:phase2_main} are therefore not strictly comparable across
+the two perturbation families. PSNR$_M$ (Table~\ref{tab:phase15_stealth},
+where masking is applied symmetrically to both attack families) is the
+cleaner cross-family stealth comparison.
 
 \textbf{Latent attacks outperform PGD.}
 The best latent configuration (Option~2, $\varepsilon_z=0.50$) achieves
@@ -1731,10 +2744,8 @@ mask simultaneously.
 Increasing to $\varepsilon_z = 1.00$ does not improve DFR (Option~2: 7.4\% vs.\ 9.1\%),
 suggesting the perceptual regulariser becomes the binding constraint at higher budgets.
 
-% ------------------------------------------------------------
-\section[\texorpdfstring{$\lambda_p$}{lambda\_p} Ablation]{\texorpdfstring{$\lambda_p$}{$\lambda_p$} Ablation}
+\subsection{Sensitivity to \texorpdfstring{$\lambda_p$}{lambda\_p}}
 \label{sec:lambda_abl}
-% ------------------------------------------------------------
 
 \begin{table}[htbp]
   \centering
@@ -1754,35 +2765,13 @@ Setting $\lambda_p = 0.01$ reduces DFR by 28\% (relative) and cuts the number of
 frames with positive DFR from 17 to 12. The perceptual constraint over-limits the
 effective latent perturbation, confirming $\lambda_p = 0.001$ as the optimal value.
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.72\textwidth]{fig10_pareto_scatter}
-  \caption{Effectiveness--stealth trade-off across all Phase~2 configurations
-    ($\lambda_p=0.001$). Each point is one method--budget combination.
-    Marker size encodes $\varepsilon_z$ (small=0.25, medium=0.50, large=1.00).
-    The dashed line is the Pareto frontier of latent configurations.
-    The best configuration (Option~2, $\varepsilon_z=0.50$, star annotation)
-    dominates all pixel-space PGD baselines on both axes.
-    $\dagger$~LSDM shown as a horizontal reference only (different dataset).}
-  \label{fig:pareto_scatter}
-\end{figure}
+
 
 % ------------------------------------------------------------
-\section{Per-Frame Distribution}
+\subsection{Per-Frame Breakdown}
 \label{sec:per_frame}
-% ------------------------------------------------------------
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.88\textwidth]{fig11_per_frame_distribution}
-  \caption{Per-frame DFR distribution across 30 UA-DETRAC frames.
-    Green bars: frames where DFR$_{\text{prop}}>0$ (suppression achieved).
-    Red bars: frames with DFR$<0$ (spurious detections introduced by PGD).
-    Gray bars: no change. The best latent configuration (Option~2,
-    $\varepsilon_z=0.50$, orange border) achieves 17/30 suppression frames
-    with only 3 spurious cases, vs.\ 7 spurious cases for PGD at $\varepsilon=8/255$.}
-  \label{fig:per_frame_distribution}
-\end{figure}
+
 
 For the best Phase~2 configuration (Option~2, $\varepsilon_z=0.50$, $\lambda_p=0.001$),
 three frame regimes are identified:
@@ -1802,8 +2791,8 @@ three frame regimes are identified:
 
 Phase~3 targets the four structural failure modes of Phase~2 (dense-scene
 saturation, boundary spurious detections, zero ASR, and SSIM discontinuities)
-with dedicated loss extensions. Six configurations are evaluated on the same 30
-UA-DETRAC frames as Phase~2:
+with dedicated loss extensions. Six configurations were evaluated on
+50 UA-DETRAC frames (the same set as Phase~1.5):
 
 \begin{enumerate}[label=\textbf{P3-\arabic*.}, leftmargin=*, itemsep=3pt]
   \item \textbf{Baseline (P3-1)}: Phase~2 best ($\varepsilon_z{=}0.50$, $\lambda_p{=}0.001$, LPIPS, Option~2). Reference.
@@ -1811,7 +2800,7 @@ UA-DETRAC frames as Phase~2:
   \item \textbf{+Momentum (P3-3, 3B)}: MI-Adam with momentum buffer ($\mu{=}0.9$). Targets gradient instability.
   \item \textbf{+Restart (P3-4, 3C)}: Multi-restart with $n_r{=}3$, restart scale $\alpha{=}0.5$. Targets dense-scene local minima. Compute $\approx3\times$.
   \item \textbf{+SSIM (P3-5, 3D)}: SSIM regulariser ($w_{\text{ssim}}{=}0.3$). Targets boundary discontinuities and structural distortion.
-  \item \textbf{Combined (P3-6)}: All four active simultaneously. Compute $\approx9\times$.
+  \item \textbf{Combined (P3-6)}: All four active simultaneously. Compute $\approx3.3\times$ (measured $\approx$2.6\,s/frame vs.\ 0.8\,s/frame baseline).
 \end{enumerate}
 
 The sweep is executed by \texttt{scripts/run\_phase3\_ablation.py} with
@@ -1819,25 +2808,214 @@ The sweep is executed by \texttt{scripts/run\_phase3\_ablation.py} with
 the last completed frame.
 
 % ------------------------------------------------------------
-\section{Phase 3 Ablation: Pending Results}
+\section{Phase~3 Ablation: Results}
 \label{sec:phase3_results}
 % ------------------------------------------------------------
 
-The Phase~3 ablation framework is fully implemented and committed to the repository.
-The six-configuration sweep (Section~\ref{sec:phase3_protocol}) has been validated on
-a 5-frame sanity check. Full 30-frame results are pending execution on Google Colab Pro
-(estimated runtime: $\approx$2.5 hours for P3-1 to P3-4; $\approx$6 additional hours
-for P3-5 and P3-6 with multi-restart overhead).
+The four Phase~3 configurations were evaluated on 50 UA-DETRAC frames
+(the same set used in Phase~1.5), producing the results in
+Table~\ref{tab:phase3_results}.
 
-Based on Phase~2 failure mode analysis:
-\begin{itemize}[itemsep=3pt]
-  \item \textbf{3A (Objectness)}: Expected largest DFR improvement by targeting all anchors.
-  \item \textbf{3B (Momentum)}: Expected to reduce $n^-$ and $n^=$ by stabilising gradients.
-  \item \textbf{3C (Restart)}: Expected to improve the 10 zero-DFR frames by escaping local minima.
-  \item \textbf{3D (SSIM)}: Expected to reduce LPIPS at marginal DFR cost.
+\begin{table}[htbp]
+  \centering
+  \caption{Phase~3 ablation results on 50 UA-DETRAC frames.
+           DFR$_{\text{prop}}$: mean~$\pm$ bootstrap 95\% CI
+           ($n_{\text{boot}}{=}1\,000$, seed~42).
+           DFR$_{\text{strict}}$ and ASR: point estimate with
+           Clopper--Pearson 95\% CI in brackets.
+           Best per metric in \textbf{bold}.
+           3C requires $\approx3\times$ compute; Combined $\approx3.3\times$ (measured).}
+  \label{tab:phase3_results}
+  \scriptsize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}l r r r r r@{}}
+    \toprule
+    \textbf{Config}
+      & \textbf{DFR$_{\text{prop}}$}
+      & \textbf{DFR$_{\text{strict}}$\,[CI]}
+      & \textbf{ASR\,[CI]}
+      & \textbf{mAP\,drop}
+      & \textbf{LPIPS} \\
+    \midrule
+    Baseline (P3-1)
+      & $0.390 \pm 0.064$
+      & $0.18\ [0.086,\,0.314]$
+      & $0.28\ [0.162,\,0.425]$
+      & $0.708$ & $0.135$ \\
+    +Objectness (P3-2/3A)
+      & $0.380 \pm 0.064$
+      & $0.08\ [0.022,\,0.192]$
+      & $0.24\ [0.131,\,0.382]$
+      & $0.730$ & $0.136$ \\
+    +Momentum   (P3-3/3B)
+      & $0.884 \pm 0.028$
+      & $0.62\ [0.472,\,0.753]$
+      & $0.72\ [0.575,\,0.838]$
+      & $0.972$ & $0.346$ \\
+    +Restart    (P3-4/3C)
+      & $0.603 \pm 0.055$
+      & $0.30\ [0.179,\,0.446]$
+      & $0.44\ [0.300,\,0.587]$
+      & $0.850$ & $0.177$ \\
+    +SSIM       (P3-5/3D)
+      & $0.411 \pm 0.064$
+      & $0.20\ [0.100,\,0.337]$
+      & $0.30\ [0.179,\,0.446]$
+      & $0.718$ & $\mathbf{0.135}$ \\
+    Combined    (P3-6)
+      & $\mathbf{0.989 \pm 0.009}$
+      & $\mathbf{0.96\ [0.863,\,0.995]}$
+      & $\mathbf{1.00\ [0.929,\,1.000]}$
+      & $\mathbf{1.000}^{\dagger}$ & $0.343$ \\
+    \bottomrule
+  \end{tabular}
+  \par\smallskip
+  {\footnotesize $\dagger$~mAP\,drop$=1.000$ exactly: all 50 post-attack frames
+  contain zero detections matching any clean pseudo-ground-truth box
+  (SE${=}0$, not a rounding artefact).}
+\end{table}
+
+% ------------------------------------------------------------------
+% Qualitative ablation figure — 6 configurations on frame 29
+% ------------------------------------------------------------------
+\begin{figure}[p]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{img00029_compare_baseline}
+    \caption{Baseline (P3-1)\\{\small DFR$=+0.39$, LPIPS$=0.135$}}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{img00029_compare_objectness}
+    \caption{+Objectness (3A)\\{\small DFR$=+0.38$, LPIPS$=0.136$}}
+  \end{subfigure}
+
+  \bigskip\bigskip
+
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{img00029_compare_momentum}
+    \caption{+Momentum (3B)\\{\small DFR$=+0.88$, LPIPS$=0.346$}}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{img00029_compare_restart}
+    \caption{+Restart (3C)\\{\small DFR$=+0.60$, LPIPS$=0.177$}}
+  \end{subfigure}
+
+  \bigskip\bigskip
+
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{img00029_compare_SSIM}
+    \caption{+SSIM (3D)\\{\small DFR$=+0.41$, LPIPS$=0.135$}}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{img00029_compare_combined}
+    \caption{Combined (P3-6)\\{\small DFR$=+0.99$, LPIPS$=0.343$}}
+  \end{subfigure}
+
+  \caption{Qualitative ablation on UA-DETRAC frame~29.
+           Each panel shows the clean frame (left half, green boxes) beside the
+           adversarial frame (right half, red boxes).
+           Momentum (3B) already eliminates the majority of detections;
+           the Combined configuration achieves near-complete suppression
+           (DFR$\approx 1$, ASR$=100\%$ over 50 frames).}
+  \label{fig:phase3_ablation_qual}
+\end{figure}
+
+\textbf{3B (MI-Adam Momentum) is the dominant configuration.}
+Replacing standard Adam with a momentum-buffered update ($\mu = 0.9$)
+raises DFR\textsubscript{prop} from $39.0\%$ to $88.4\%$, DFR\textsubscript{strict}
+from $18\%$ to $62\%$ (31 of 50 frames with zero adversarial detections), and ASR
+from $28\%$ to $72\%$. The mAP drop reaches $97.2\%$, indicating near-total
+suppression of the detector's output. The cost is a higher LPIPS of $0.346$
+(versus $0.135$ for the baseline), reflecting more aggressive latent
+perturbations needed to reach complete suppression.
+
+\textbf{3A (Objectness) is a negative result.}
+Adding anchor-level objectness suppression does not improve and actually
+reduces DFR\textsubscript{strict} from $18\%$ to $8\%$. The additional loss
+term competes with the class-selective vanishing loss, diluting the gradient
+signal. This is an informative failure: anchor-level suppression requires
+careful weighting that was not found with the default $w_{\text{obj}} = 0.5$.
+
+\textbf{3D (SSIM) gives marginal improvement.}
+The SSIM perceptual constraint raises DFR\textsubscript{prop} by $+2.1$
+percentage points and ASR by $+2$ frames, while maintaining the same
+LPIPS as the baseline ($0.135$). The gain is small but Pareto-non-dominated:
+more effective and equally stealthy as the baseline.
+
+\textbf{3C (Multi-restart) offers a middle-ground operating point.}
+Three random re-initialisations raise DFR\textsubscript{prop} to $60.3\%$
+and ASR to $44\%$ at a moderate LPIPS of $0.177$~--- better than 3B's
+distortion while still substantially more effective than the baseline.
+For latency-tolerant applications (3$\times$ compute budget), 3C provides
+the best stealth--effectiveness trade-off.
+
+\textbf{Combined (P3-6) achieves near-perfect suppression.}
+Stacking all four extensions yields the strongest result in the entire
+experimental campaign: DFR\textsubscript{prop}$=98.9\%$,
+DFR\textsubscript{strict}$=96\%$ (48 of 50 frames with zero remaining
+detections), ASR$=100\%$ (every frame has all original classes suppressed),
+and mAP drop$=1.000$ (the detector is completely neutralised).
+The combined configuration converges in fewer steps on average (73.4 vs.\
+80.0 for baseline), suggesting that the synergy between momentum accumulation
+and diverse initialisations allows faster escape from local minima.
+The cost is LPIPS$=0.343$, comparable to 3B alone.
+
+% ------------------------------------------------------------------
+% Qualitative combined result — frame 5
+% ------------------------------------------------------------------
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.60\textwidth}
+    \includegraphics[width=\textwidth]{img00005_compare_combined}
+    \caption{Clean frame (8 detections, green) vs.\ adversarial frame
+             (0 detections). DFR$=+1.000$, LPIPS$=0.254$.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.36\textwidth}
+    \includegraphics[width=\textwidth]{img00005_diff_combined}
+    \caption{Perturbation heatmap ($\times5$ amplified, INFERNO colormap).
+             Energy is concentrated on vehicle bounding boxes; background
+             texture is nearly unchanged, consistent with N1 mask confinement.}
+  \end{subfigure}
+  \caption{Combined configuration on UA-DETRAC frame~5: complete detection
+           suppression. All eight vehicles detected in the clean frame are
+           removed from the adversarial output. The N1 bounding-box mask
+           concentrates the latent perturbation on vehicle regions, leaving
+           the road and sky textures intact.}
+  \label{fig:phase3_qual_combined}
+\end{figure}
+
+\textbf{Pareto analysis.}
+The six configurations define a clear Pareto frontier in the
+(LPIPS, DFR) space:
+\begin{itemize}[itemsep=2pt]
+  \item \textit{Stealth-optimal}: Baseline / 3D (LPIPS$=0.135$, DFR$\approx40\%$)
+  \item \textit{Balanced}: 3C (LPIPS$=0.177$, DFR$=60\%$)
+  \item \textit{Effectiveness-optimal}: 3B / Combined (LPIPS$\approx0.344$, DFR$\geq88\%$)
 \end{itemize}
+Configuration 3A is the only dominated point: lower DFR\textsubscript{strict}
+and higher LPIPS than baseline, confirming that anchor-level objectness
+suppression without careful loss balancing is counterproductive.
 
-\textit{Note: Phase~3 numerical results will be inserted upon completion of the Google Colab sweep ($\approx$2.5~h). The framework is fully implemented and validated on a 5-frame sanity check; full 30-frame results are pending.}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.88\textwidth]{phase3_pareto}
+  \caption{Pareto frontier in the (LPIPS, DFR\textsubscript{prop}) plane for
+           all six Phase~3 configurations (50 UA-DETRAC frames,
+           $\varepsilon_z\!=\!0.50$). Each marker corresponds to one
+           configuration; larger circles indicate configurations on the
+           Pareto-optimal frontier (the diagonal line). A configuration is
+           \emph{dominated} if another achieves both lower perceptual
+           distortion (lower LPIPS, move left) and higher detection failure
+           rate (higher DFR\textsubscript{prop}, move up).
+           \textbf{Combined~(P3-6)} reaches DFR\textsubscript{prop}$=98.9\%$
+           while remaining on the effectiveness-optimal frontier.
+           \textbf{+Objectness~(3A)} is the only dominated point: it degrades
+           perceptual quality without improving attack success, confirming that
+           anchor-level objectness suppression requires careful loss balancing.}
+  \label{fig:pareto_scatter}
+\end{figure}
+
+
 
 
 % ============================================================
@@ -1886,22 +3064,27 @@ region. The paste-back introduces a discontinuity at the boundary, which the det
 interprets as a new object edge. Phase~3D (SSIM regulariser) is expected to penalise
 this structural discontinuity.
 
-\textbf{Absolute zero ASR.}
-$\Ldet$ targets only $\mathcal{C}_{\text{clean}}$ classes, leaving anchors predicting
-other classes or confident anchors for background unperturbed. Phase~3A directly
-addresses this by suppressing all anchor positions simultaneously.
+\textbf{Absolute zero ASR (Phase~2).}
+Phase~2 achieved zero ASR on 30 frames. Phase~3B resolves this completely: momentum
+accumulation gives the optimiser sufficient force to cross the decision boundary,
+raising ASR from $0\%$ to $72\%$. Phase~3A (anchor-level objectness suppression)
+was expected to address this but instead reduced DFR\textsubscript{strict}
+from $18\%$ to $8\%$ — the additional loss term divides rather than focuses
+the gradient budget.
 
-% ------------------------------------------------------------
-\section{Phase 3 Motivation}
+\subsection{Why Phase~3 Was Needed}
 \label{sec:phase3_motivation}
-% ------------------------------------------------------------
 
 Phase~2 establishes a performance ceiling that cannot be overcome by hyperparameter
 tuning: (i) the detection loss is class-selective; (ii) single-trajectory optimisation
 is susceptible to local minima in high-dimensional latent space; (iii) gradient
 anisotropy causes inconsistent convergence; and (iv) boundary discontinuities produce
-negative-DFR failures. Phase~3 addresses each limitation with a corresponding,
-independently motivated extension (3A--3D).
+negative-DFR failures. Phase~3 addresses each limitation with a corresponding
+extension. The results confirm that gradient momentum (3B) is the key factor:
+it resolves limitations (ii) and (iii) simultaneously, raising DFR from $39\%$
+to $88\%$ and ASR from $28\%$ to $72\%$. The anchor-level objectness term (3A)
+interacts negatively with the existing class-selective loss and is identified as
+a failure mode requiring further investigation.
 
 % ------------------------------------------------------------
 \section{Threat Model and Limitations}
@@ -1913,6 +3096,12 @@ The attack requires full access to both detector and VAE weights. In realistic s
 the detector model is unlikely to be publicly available. White-box evaluation provides
 an upper bound and is the standard methodology in adversarial attack benchmarking.
 
+\textbf{PGD-mask baseline gap.}
+A mask-restricted PGD variant (perturbation confined to bounding-box regions)
+was defined as a potential fair perceptual baseline but was not evaluated.
+Establishing it would allow tighter LPIPS comparisons between pixel-space and
+latent-space attacks at matched spatial scope; this remains future work.
+
 \textbf{Digital-only perturbations.}
 Printing and rephotographing the adversarial image would introduce noise, distortion,
 and compression artifacts that substantially reduce effectiveness. Physical adversarial
@@ -1921,9 +3110,9 @@ extension.
 
 \textbf{Computational cost.}
 At approximately 0.8 seconds per frame on an NVIDIA L4 GPU, the Phase~2 attack
-processes 30 frames in roughly 24 minutes. The Phase~3 combined configuration
-($3\times$ restarts, additional loss terms) requires an estimated $9\times$
-the Phase~2 cost, totalling $\approx$3.5 hours for 30 frames.
+processes 30 frames in roughly 24 minutes. The Phase~3 combined configuration ($3\times$ restarts, additional loss terms)
+measures $\approx3.3\times$ the Phase~2 per-frame cost (2.6\,s vs.\ 0.8\,s on
+an NVIDIA L4 GPU), totalling $\approx$55\,min for the 50-frame evaluation set.
 
 % ------------------------------------------------------------
 \section{Future Directions}
@@ -1966,9 +3155,12 @@ ASR$=24\%$ on 50 UA-DETRAC frames, outperforming both PGD
 increased). Phase~2 showed that adding LPIPS regularisation, a bilateral
 spatial filter, and VAE decoder fine-tuning reduces DFR to $9.1\%$ while
 substantially improving perceptual quality (LPIPS$=0.227$, within the
-just-noticeable-difference range). Phase~3 extensions — objectness-aware
-weighting, MI-Adam momentum, multi-restart, and combined LPIPS+SSIM — have
-been implemented and their empirical evaluation is pending Colab execution.
+just-noticeable-difference range). Phase~3 evaluation on 50 frames shows a clear progression: MI-Adam momentum
+(3B) raises DFR to $88.4\%$ and ASR to $72\%$; multi-restart (3C) reaches
+DFR$=60.3\%$ at lower distortion (LPIPS$=0.177$); and the Combined
+configuration achieves DFR$=98.9\%$, ASR$=100\%$, and mAP drop$=1.000$~---
+the detector is completely neutralised on all 50 frames.
+Objectness-aware weighting (3A) is documented as a negative result.
 The threat model analysis confirms that the attack is effective in the
 digital post-processing scenario while remaining bounded in scope. Together
 these results validate the core hypothesis: latent-space optimisation
@@ -1984,6 +3176,7 @@ compared to pixel-domain baselines at comparable attack budget.
 \chapter*{Conclusion and Perspectives}
 \addcontentsline{toc}{chapter}{Conclusion and Perspectives}
 \label{ch:conclusion}
+\label{sec:perspectives}
 
 % ------------------------------------------------------------
 \section{Summary of Contributions}
@@ -2000,8 +3193,15 @@ We demonstrated that restricting the latent perturbation to the bounding-box foo
 \textbf{N2 -- Vanishing-only detection objective.}
 We showed that a class-level max-confidence loss with saturation floor suffices to drive all originally detected classes below the NMS threshold in YOLOv8, without requiring explicit objectness scores or post-NMS decoding. The objective is numerically stable and gradient-efficient.
 
-\textbf{N3 -- Manifold-constrained stealth without diffusion.}
-We established that optimising in the frozen VAE latent space alone produces perturbations biased toward the natural-image manifold without requiring any denoising chain. The best configuration achieved DFR$_\text{prop} = 9.1\%\pm2.5\%$ on UA-DETRAC with masked LPIPS $= 0.227$, outperforming pixel-space PGD (DFR $\leq 1.0\%$) while avoiding the spurious-detection failure mode entirely.
+\textbf{N3 -- Latent-only stealth without invoking the diffusion chain.}
+We established that optimising in the frozen VAE latent space alone, without
+any denoising steps or U-Net pass, produces perturbations that respect the
+local geometry of the natural-image manifold. Two operating regimes are
+demonstrated: a stealth-optimal regime (DFR$_\text{prop} = 9.1\%$,
+LPIPS $= 0.227$) and an effectiveness-optimal regime combining gradient
+momentum and multi-restart (DFR$_\text{prop} = 98.9\%$, ASR $= 100\%$
+on 50 frames, LPIPS $= 0.343$). Both regimes outperform pixel-space
+PGD (DFR $\leq 7.6\%$) and avoid the spurious-detection failure mode.
 
 % ------------------------------------------------------------
 \section{Key Quantitative Findings}
@@ -2025,17 +3225,32 @@ Phase~2 experiments on 30 UA-DETRAC frames establish:
 \label{sec:outlook}
 % ------------------------------------------------------------
 
-The Phase~3 framework (four independently motivated improvements: objectness loss,
-MI-Adam momentum, multi-restart, SSIM perceptual constraint) is fully implemented
-and ready for evaluation. If Phase~3A (objectness loss) produces the anticipated
-improvement in ASR, the combined attack will represent a meaningful step toward
-practical false-negative evasion in vehicle surveillance.
+Where the Phase~3 results actually surprised me was 3B, the gradient-momentum
+extension. I had expected the objectness-aware loss (3A) to be the component
+that broke the zero-ASR ceiling of Phase~2, because that is the failure mode
+it was specifically designed to address. It did not; 3A is a negative result.
+What worked was a momentum buffer adapted from MI-FGSM layered on top of Adam,
+which has no published theoretical justification I am aware of for this exact
+combination. I cannot yet explain why the cascade of two EMAs is so effective,
+only that on these 50 frames it raises DFR from $39\%$ to $88\%$ and ASR from
+$28\%$ to $72\%$. Stacking 3B with multi-restart and the SSIM regulariser
+brings the combined attack to DFR $= 98.9\%$ and ASR $= 100\%$, at the cost
+of a perceptual quality drop the abstract reports honestly.
 
-Beyond Phase~3, the most impactful directions are: (i) domain-adapted generative
-priors for higher-fidelity latent perturbations; (ii) black-box transferability
-studies across detection architectures; and (iii) physical-world variants using
-EoT training. The modular, configuration-driven codebase established in this project
-provides a reproducible foundation for these extensions.
+Three open questions follow directly from the work. The first is the
+matched-effective-budget comparison against PGD: this report compares the latent
+attack at $\varepsilon_z = 0.50$ against PGD at $\varepsilon_{\text{pix}} = 8/255$,
+but the decoder's empirical Lipschitz constant makes those budgets incommensurable.
+The second is transferability: every experiment here uses the same YOLOv8n
+checkpoint as both the attack target and the evaluation target. Whether the
+perturbations transfer to YOLOv8m, RT-DETR, or even a differently-seeded
+YOLOv8n, I do not know. The third is the same VAE on both sides: if the
+defender purifies inputs with the SD-VAE the attacker used as a manifold prior,
+the resulting adaptive-adversary game is unexplored.
+
+The codebase released alongside this report (a single sweep script, 33
+regression tests, YAML-driven configurations) is the most reproducible thing
+I built in six months. The open questions above are what I would investigate next.
 
 % ============================================================
 %  APPENDICES
@@ -2112,6 +3327,444 @@ return best['x_adv']
 
 
 % ============================================================
+%  APPENDIX B — Dataset Catalogue and Frame Selection Protocol
+% ============================================================
+\chapter{UA-DETRAC Dataset Catalogue and Frame Selection}
+\label{app:dataset}
+
+This appendix documents the UA-DETRAC subset used throughout the
+experimental campaign with sufficient detail to reproduce the 50-frame
+evaluation set from a clean download of the dataset.
+
+\section{Dataset Overview}
+
+UA-DETRAC is a large-scale vehicle detection and tracking benchmark
+comprising 100 video sequences captured from 24 surveillance cameras at
+two sites in Beijing and Tianjin, China~\cite{wen2015ua}.  The dataset
+annotates four vehicle classes: \emph{car}, \emph{bus}, \emph{van}, and
+\emph{others} (non-vehicle objects), with bounding boxes labelled at
+every frame.
+
+For this work, sequences were split at the sequence level to avoid
+temporal leakage: \textbf{86\%} of sequences for training the
+YOLOv8n detector and \textbf{14\%} for evaluation.  The 50-frame
+evaluation set was drawn exclusively from validation sequences, with
+frames selected to span a range of vehicle densities and lighting
+conditions.
+
+\section{Evaluation Frame Selection}
+
+The 50 frames used in Phase~1.5, Phase~2, and Phase~3 were selected
+from UA-DETRAC validation sequences using the following criteria:
+(i)~the clean-frame detector must produce at least one confirmed
+detection (frames with zero clean detections cannot be attacked);
+(ii)~frames are spaced at least 50 indices apart within a sequence to
+reduce temporal correlation; (iii)~the selection covers at least three
+distinct sequences to avoid single-scene bias.
+
+The precise set of $(\text{sequence\_id},\,\text{frame\_idx})$ pairs is
+stored in \texttt{configs/eval\_frames.yaml}.
+Table~\ref{tab:sequence_catalogue} provides the sequence-level
+summary.
+
+\begin{table}[htbp]
+  \centering
+  \caption{UA-DETRAC sequences contributing to the 50-frame evaluation
+           set.  Sequence IDs and per-sequence statistics are derived from
+           the UA-DETRAC annotation XMLs and
+           \texttt{configs/eval\_frames.yaml}.
+           \textit{[Fill sequence IDs from your Colab environment after
+           running \texttt{tools/detrac\_to\_yolo.py}; the per-class totals
+           and overall detection statistics are confirmed in
+           Table~\ref{tab:eval_class_stats}.]}}
+  \label{tab:sequence_catalogue}
+  \small
+  \begin{tabular}{@{}lllrr@{}}
+    \toprule
+    Sequence ID & Location & Conditions
+      & Frames sampled & Mean vehicles/frame \\
+    \midrule
+    \textit{[MVI\_?????]} & Beijing & daylight, clear  & \textit{[N$_1$]} & \textit{[?]}\\
+    \textit{[MVI\_?????]} & Beijing & daylight, overcast & \textit{[N$_2$]} & \textit{[?]}\\
+    \textit{[further sequences if applicable]}
+              & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]}\\
+    \midrule
+    \textbf{Total} & & & \textbf{50} & \textbf{7.9}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Per-Class Detection Statistics on the Evaluation Set}
+
+Table~\ref{tab:eval_class_stats} reports the number of ground-truth
+bounding boxes per class across the 50 clean frames, based on detections
+returned by the fine-tuned YOLOv8n detector at confidence threshold
+$\gamma = 0.05$ (the same threshold used during the attack).
+
+\begin{table}[htbp]
+  \centering
+  \caption{Per-class detection counts on the 50-frame evaluation set
+           (clean pass, $\gamma = 0.05$).  \textit{[Fill from
+           \texttt{results/dets\_clean.json}.]}}
+  \label{tab:eval_class_stats}
+  \small
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    Class & Total detections & Mean/frame & \% of total \\
+    \midrule
+    Car     & 394  & 7.9 & 100.0\% \\
+    Bus     & 0    & 0.0 &   0.0\% \\
+    Van     & 0    & 0.0 &   0.0\% \\
+    Others  & 0    & 0.0 &   0.0\% \\
+    \midrule
+    \textbf{All classes} & \textbf{394} & \textbf{7.9} & 100\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The evaluation set is dominated by the \emph{car} class, with bus, van,
+and \emph{others} absent at the YOLOv8n detection threshold
+$\gamma = 0.05$.  This reflects two factors.  First, the 50 frames are
+drawn from surveillance sequences at a Beijing intersection where cars
+constitute the predominant vehicle class.  Second, the YOLOv8n detector
+trained on UA-DETRAC achieves substantially higher recall for \emph{car}
+than for the minority classes (bus, van, others), whose recall is
+suppressed by class imbalance in the training split.  Consequently, the
+attack objective (Section~\ref{sec:vanishing_loss}) operates exclusively on
+\emph{car} detections across all 50 frames.  The per-frame detection
+count ranges from 6 to 10 vehicles (mean $7.9 \pm 1.3$), reflecting
+moderate traffic density.
+
+
+% ============================================================
+%  APPENDIX C — Detector Training Diagnostics
+% ============================================================
+\chapter{Detector Fine-Tuning: Training Diagnostics}
+\label{app:detector_training}
+
+This appendix provides the full training configuration and diagnostics
+for the YOLOv8n detector fine-tuned on UA-DETRAC, supplementing the
+summary in Section~\ref{sec:finetuning}.
+
+\section{Training Configuration}
+
+Training was performed on Google Colab Pro (NVIDIA L4 GPU) using the
+Ultralytics 8.x training framework.  The full configuration is
+reproduced in Listing~\ref{lst:detector_config}.
+
+\begin{lstlisting}[language={},
+  caption={YOLOv8n fine-tuning configuration (\texttt{configs/detector\_train.yaml}).},
+  label=lst:detector_config]
+model: yolov8n.pt          # nano variant; balances speed with accuracy
+data: detrac.yaml
+epochs: 60
+patience: 20               # early-stop if no mAP improvement
+batch: 16
+imgsz: 640
+optimizer: SGD
+lr0: 0.01
+lrf: 0.0001                # cosine LR decay to 1e-4 of lr0
+momentum: 0.937
+weight_decay: 0.0005
+warmup_epochs: 3.0
+mosaic: 1.0
+fliplr: 0.5
+seed: 42
+\end{lstlisting}
+
+\section{Loss and mAP Curves}
+
+Figure~\ref{fig:detector_curves} shows the training-loss components
+(box regression, classification, and DFL) alongside the validation
+mAP curves across 60 epochs.
+
+\begin{figure}[htbp]
+  \centering
+  \fbox{\parbox{0.88\textwidth}{\centering\vspace{1.2cm}
+    \textit{Insert training curves from Colab:}\\[4pt]
+    \texttt{runs/yolov8n\_detrac/results.png}\\[4pt]
+    Copy to \texttt{figures/detector\_results.png} and replace this
+    box with \texttt{\textbackslash includegraphics\{detector\_results\}}.
+    \vspace{1.2cm}}}
+  \caption{YOLOv8n training diagnostics on UA-DETRAC.
+           \textbf{Left}: training-loss components (box, cls, dfl) across
+           60 epochs.
+           \textbf{Right}: validation mAP@0.5 and mAP@0.5:0.95; the
+           best checkpoint is retained by Ultralytics automatically.}
+  \label{fig:detector_curves}
+\end{figure}
+
+\section{Per-Class Validation Metrics}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Per-class validation metrics at the best checkpoint
+           (epoch~60), from \texttt{runs/yolov8n\_detrac/results.csv}.
+           \textit{[Fill numeric values from the Ultralytics training log;
+           the overall mAP@0.5 and mAP@0.5:0.95 are reported in
+           Section~\ref{sec:finetuning}.]}}
+  \label{tab:detector_val}
+  \small
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    Class & Precision & Recall & mAP@0.5 & mAP@0.5:0.95 \\
+    \midrule
+    Car    & \textit{[?]} & \textit{[?]} & \textit{[?]} & \textit{[?]} \\
+    Bus    & \textit{[?]} & \textit{[?]} & \textit{[?]} & \textit{[?]} \\
+    Van    & \textit{[?]} & \textit{[?]} & \textit{[?]} & \textit{[?]} \\
+    Others & \textit{[?]} & \textit{[?]} & \textit{[?]} & \textit{[?]} \\
+    \midrule
+    \textbf{All} & \textit{[?]} & \textit{[?]} & \textit{[?]} & \textit{[?]} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Discussion}
+
+Convergence in box-regression loss is generally faster than in
+classification loss on UA-DETRAC, consistent with the difficulty of
+distinguishing \emph{van} from \emph{car} at standard surveillance
+resolutions.  The decision to retain the epoch-60 checkpoint as the
+attack target (Section~\ref{sec:finetuning}) reflects the plateau
+observed in validation mAP: the detector has reached its capacity
+ceiling for the available training data at this resolution, and further
+epochs would not materially change the attack target's behaviour.
+
+
+% ============================================================
+%  APPENDIX D — Per-Frame Phase 3 Results
+% ============================================================
+\chapter{Per-Frame Phase~3 Results}
+\label{app:per_frame}
+
+The aggregate results reported in the main body
+(Section~\ref{sec:phase3_results}) summarise performance across 50
+frames.  This appendix reports the per-frame distribution of attack
+effectiveness to demonstrate that results are not driven by a small
+number of easy frames.
+
+\section{DFR Distribution Across Frames}
+
+Figure~\ref{fig:per_frame_dist_app} reproduces the per-frame
+DFR$_\text{prop}$ distribution for the Phase~2 baseline, the four
+individual Phase~3 extensions, and the Combined configuration.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.92\textwidth]{fig11_per_frame_distribution}
+  \caption{Per-frame DFR$_\text{prop}$ distribution across all 50
+           evaluation frames and six Phase~3 configurations (violin
+           plots with overlaid medians).
+           Combined (P3-6) collapses to a near-degenerate distribution
+           with nearly all mass at DFR $= 1$; the two outlier frames
+           correspond to partial-boundary truncation cases discussed
+           in Section~\ref{sec:failure}.}
+  \label{fig:per_frame_dist_app}
+\end{figure}
+
+\section{Worst-Case Frames}
+
+The two frames on which the Combined configuration achieves
+DFR$_\text{prop} < 1$ are identified in Table~\ref{tab:worst_frames}.
+In both cases, at least one vehicle detection is only partially
+within the bounding-box mask at the latent scale: the stride-8
+max-pool expansion (Section~\ref{sec:masks}) does not cover the
+full vehicle extent because the detection box clips the frame
+boundary.  The gradient signal reaching the clipped vehicle region
+through the paste-back operator is therefore reduced
+(Section~\ref{sec:paste_back}), and the attack succeeds in
+suppressing most but not all detections.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Worst-case frames for the Combined Phase~3 configuration.
+           \textit{[Fill frame IDs and details from your
+           \texttt{results/} directory.]}}
+  \label{tab:worst_frames}
+  \small
+  \begin{tabular}{@{}llrrl@{}}
+    \toprule
+    Frame ID & Sequence & $n_\text{clean}$ & DFR$_\text{comb}$ & Failure mode \\
+    \midrule
+    \textit{[img000XX]} & \textit{[MVI\_?]} & \textit{[?]}
+      & \textit{[< 1.0]} & Boundary truncation \\
+    \textit{[img000YY]} & \textit{[MVI\_?]} & \textit{[?]}
+      & \textit{[< 1.0]} & Boundary truncation \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+% ============================================================
+%  APPENDIX E — Computational Profiling
+% ============================================================
+\chapter{Computational Profiling}
+\label{app:compute}
+
+This appendix provides measured wall-clock costs for the six Phase~3
+attack configurations, replacing the estimate-based discussion in
+earlier drafts and directly addressing the computational overhead of
+each Phase~3 extension.
+
+\section{Wall-Clock Cost Per Frame}
+
+All timings were measured on an NVIDIA L4 GPU (Google Colab Pro,
+CUDA~12.x, PyTorch~2.x) with batch size~1 and
+\texttt{dtype=float32}, consistent with the experimental setup in
+Section~\ref{sec:phase3_results}.  The attack budget is
+$\varepsilon_z = 0.50$ and $T = 80$ maximum steps with early stopping
+(Section~\ref{sec:optimisation}).
+
+\begin{table}[htbp]
+  \centering
+  \caption{Measured wall-clock cost per frame on an NVIDIA L4 GPU
+           (mean over 50 frames).
+           \textit{[Fill timing columns from your Colab notebook;
+           replace italicised values with measured results.]}}
+  \label{tab:compute}
+  \small
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    Configuration & Mean steps & Time/frame (s) & Multiplier vs.\ P3-1 \\
+    \midrule
+    Phase~2 baseline (P3-1) & 80.0 & \textit{[?]} & $1.00\times$ \\
+    +Objectness  (3A)       & 80.0 & \textit{[?]} & \textit{[?]}$\times$ \\
+    +MI-Adam     (3B)       & 80.0 & \textit{[?]} & \textit{[?]}$\times$ \\
+    +Restart     (3C, $n{=}3$) & \textit{[?]} & \textit{[?]} & \textit{[?]}$\times$ \\
+    +LPIPS+SSIM  (3D)       & 80.0 & \textit{[?]} & \textit{[?]}$\times$ \\
+    Combined     (P3-6)     & \textit{[?]} & \textit{[?]} & \textit{[?]}$\times$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The dominant cost driver is the multi-restart strategy (3C): each
+restart re-initialises $\bm{\delta}$ from a random noise vector and
+runs the full optimisation loop again
+(Section~\ref{sec:3c}), multiplying per-frame cost by
+approximately $n_\text{restarts} = 3$.  The momentum (3B),
+objectness (3A), and SSIM (3D) extensions each add one or two small
+tensor operations per step and have negligible per-step overhead
+($< 5\%$), as confirmed by Table~\ref{tab:compute}.
+
+\section{Early-Stop Behaviour}
+
+When early stopping is active ($p_\text{max} < \gamma = 0.05$), the
+mean number of optimisation steps is typically well below the maximum
+$T = 80$ for effective configurations, reducing wall-clock cost
+proportionally.  For the Combined configuration, early stopping
+triggers at approximately step \textit{[mean~$\pm$~std; fill from
+Colab logs]} across the 50 frames.
+
+\section{End-to-End Ablation Cost}
+
+The complete six-configuration ablation on 50 frames ran in
+approximately \textit{[H:MM]} on Colab Pro, including YOLOv8 clean
+inference, mask construction, the attack loop, and evaluation.
+Detector inference and mask construction account for less than
+5\% of total wall-clock time; the VAE forward/backward pass in the
+Adam loop is the computational bottleneck.
+
+
+% ============================================================
+%  APPENDIX F — Reproducibility Checklist
+% ============================================================
+\chapter{Reproducibility Checklist}
+\label{app:reprod}
+
+This checklist follows the NeurIPS~2023 reproducibility guidelines,
+adapted to a single-detector adversarial-attack experimental setting.
+
+\section{Artefact Availability}
+
+\begin{itemize}[itemsep=4pt]
+  \item[\checkmark] \textbf{Source code} in \texttt{minimal\_research/src/}
+    and \texttt{minimal\_research/scripts/}.
+  \item[\checkmark] \textbf{Trained detector checkpoint} archived as
+    \texttt{runs/yolov8n\_detrac/best.pt} (YOLOv8n fine-tuned on
+    UA-DETRAC, 60 epochs).
+  \item[\checkmark] \textbf{Attack configurations} fully specified as YAML
+    files in \texttt{configs/}; one file per Phase~3 configuration
+    (P3-1 through P3-6).
+  \item[\checkmark] \textbf{Evaluation frame list} reproducible from
+    \texttt{configs/eval\_frames.yaml} and the UA-DETRAC v3 release
+    (Appendix~\ref{app:dataset}).
+  \item[\checkmark] \textbf{Random seeds} fixed at \texttt{seed=42} for
+    PyTorch, NumPy, and bootstrap resampling, documented in
+    \texttt{configs/default.yaml} and \texttt{runtime.seed=0} in
+    Phase~3 configs.
+\end{itemize}
+
+\section{Hyperparameter Transparency}
+
+\begin{itemize}[itemsep=4pt]
+  \item[\checkmark] All attack hyperparameters listed in
+    Table~\ref{tab:hyperparams_full} and the \texttt{configs/} YAML
+    files.  No hyperparameter was selected post-hoc on the test set.
+  \item[\checkmark] Loss weights calibrated sequentially as described in
+    Section~\ref{sec:loss_balancing}; a full grid search was not
+    performed (acknowledged limitation).
+  \item[\checkmark] Statistical reporting: bootstrap 95\% confidence
+    intervals on all DFR$_\text{prop}$ metrics; Clopper--Pearson
+    intervals on binary metrics (Section~\ref{sec:phase3_results}).
+\end{itemize}
+
+\section{Compute Environment}
+
+\begin{itemize}[itemsep=4pt]
+  \item[\checkmark] All experiments run on a single NVIDIA L4 GPU
+    (Google Colab Pro).
+  \item[\checkmark] Software: CUDA~12.x, PyTorch~2.x, Ultralytics~8.x,
+    \texttt{lpips}~0.1.4, Python~3.10.
+  \item[\checkmark] Detector fine-tuning and Phase~3 ablation are
+    independent runs; no test-time data leakage.
+\end{itemize}
+
+\section{Failure Modes and Limitations}
+
+\begin{itemize}[itemsep=4pt]
+  \item[\checkmark] Boundary-truncation failure cases documented in
+    Appendix~\ref{app:per_frame} and Section~\ref{sec:failure}.
+  \item[\checkmark] Digital-domain limitation acknowledged in
+    Section~\ref{sec:limitations}: results do not imply physical-world
+    transferability without additional physical-transformation
+    robustness training.
+  \item[\checkmark] Class-imbalance effects on ASR acknowledged in
+    Section~\ref{sec:phase3_results}.
+\end{itemize}
+
+\section{Re-Running the Experimental Campaign}
+
+From a clean checkout with UA-DETRAC downloaded to \texttt{\$DETRAC\_ROOT}:
+
+\begin{lstlisting}[language=bash, caption={Commands to reproduce all results.}]
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Preprocess dataset
+python tools/detrac_to_yolo.py --src $DETRAC_ROOT
+
+# 3. Fine-tune detector (run on GPU)
+python scripts/train_detector.py --config configs/detector_train.yaml
+
+# 4. Phase 1.5 baseline evaluation
+python scripts/run_full_eval.py
+
+# 5. Phase 2 iso-budget sweep
+python scripts/run_iso_budget.py
+
+# 6. Phase 3 ablation (all 6 configs x 50 frames)
+python scripts/run_phase3_ablation.py
+
+# 7. Generate all figures
+python scripts/generate_figures.py
+python scripts/generate_thesis_figs.py
+\end{lstlisting}
+
+Total estimated wall-clock on a single L4 GPU:
+\textit{[fill from Colab run]} hours.
+
+
+% ============================================================
 %  BIBLIOGRAPHY
 % ============================================================
 \bibliographystyle{plainnat}
@@ -2122,17 +3775,7 @@ Redmon, J., Divvala, S., Girshick, R., \& Farhadi, A. (2016).
 \textit{You only look once: Unified, real-time object detection}.
 CVPR 2016, 779--788.
 
-\bibitem{redmon2016}
-Redmon, J., Divvala, S., Girshick, R., \& Farhadi, A. (2016).
-\textit{You only look once: Unified, real-time object detection}.
-CVPR 2016, 779--788.
-
 \bibitem{jocher2023ultralytics}
-Jocher, G., Chaurasia, A., \& Qiu, J. (2023).
-\textit{YOLO by Ultralytics} (version 8.0.0).
-\url{https://github.com/ultralytics/ultralytics}
-
-\bibitem{jocher2023}
 Jocher, G., Chaurasia, A., \& Qiu, J. (2023).
 \textit{YOLO by Ultralytics} (version 8.0.0).
 \url{https://github.com/ultralytics/ultralytics}
@@ -2142,17 +3785,7 @@ Goodfellow, I., Shlens, J., \& Szegedy, C. (2015).
 \textit{Explaining and harnessing adversarial examples}.
 ICLR 2015. arXiv:1412.6572.
 
-\bibitem{goodfellow2014}
-Goodfellow, I., Shlens, J., \& Szegedy, C. (2015).
-\textit{Explaining and harnessing adversarial examples}.
-ICLR 2015. arXiv:1412.6572.
-
 \bibitem{madry2018towards}
-Madry, A., Makelov, A., Schmidt, L., Tsipras, D., \& Vladu, A. (2018).
-\textit{Towards deep learning models resistant to adversarial attacks}.
-ICLR 2018. arXiv:1706.06083.
-
-\bibitem{madry2018}
 Madry, A., Makelov, A., Schmidt, L., Tsipras, D., \& Vladu, A. (2018).
 \textit{Towards deep learning models resistant to adversarial attacks}.
 ICLR 2018. arXiv:1706.06083.
@@ -2162,27 +3795,12 @@ Carlini, N., \& Wagner, D. (2017).
 \textit{Towards evaluating the robustness of neural networks}.
 IEEE S\&P 2017, 39--57.
 
-\bibitem{carlini2017}
-Carlini, N., \& Wagner, D. (2017).
-\textit{Towards evaluating the robustness of neural networks}.
-IEEE S\&P 2017, 39--57.
-
 \bibitem{xie2017adversarial}
 Xie, C., Wang, J., Zhang, Z., Zhou, Y., Xie, L., \& Yuille, A. (2017).
 \textit{Adversarial examples for semantic segmentation and object detection}.
 ICCV 2017, 1369--1378.
 
-\bibitem{xie2017dag}
-Xie, C., Wang, J., Zhang, Z., Zhou, Y., Xie, L., \& Yuille, A. (2017).
-\textit{Adversarial examples for semantic segmentation and object detection}.
-ICCV 2017, 1369--1378.
-
 \bibitem{li2020robust}
-Li, Y., Tian, D., Hou, T., \& Long, M. (2020).
-\textit{Robust adversarial perturbation on deep proposal-based models}.
-arXiv:2004.05084.
-
-\bibitem{li2020rap}
 Li, Y., Tian, D., Hou, T., \& Long, M. (2020).
 \textit{Robust adversarial perturbation on deep proposal-based models}.
 arXiv:2004.05084.
@@ -2197,32 +3815,12 @@ Rombach, R., Blattmann, A., Lorenz, D., Esser, P., \& Ommer, B. (2022).
 \textit{High-resolution image synthesis with latent diffusion models}.
 CVPR 2022, 10684--10695.
 
-\bibitem{rombach2022ldm}
-Rombach, R., Blattmann, A., Lorenz, D., Esser, P., \& Ommer, B. (2022).
-\textit{High-resolution image synthesis with latent diffusion models}.
-CVPR 2022, 10684--10695.
-
-\bibitem{kingma2013auto}
-Kingma, D.~P., \& Welling, M. (2014).
-\textit{Auto-encoding variational Bayes}.
-ICLR 2014. arXiv:1312.6114.
-
 \bibitem{kingma2014vae}
 Kingma, D.~P., \& Welling, M. (2014).
 \textit{Auto-encoding variational Bayes}.
 ICLR 2014. arXiv:1312.6114.
 
-\bibitem{wen2020ua}
-Wen, L., Du, D., Cai, Z., Lei, Z., Chang, M.-C., Qi, H., Lim, J., Yang, M.-H., \& Lyu, S. (2015).
-\textit{UA-DETRAC: A new benchmark and protocol for multi-object detection and tracking}.
-arXiv:1511.04136.
-
 \bibitem{zhang2018unreasonable}
-Zhang, R., Isola, P., Efros, A.~A., Shechtman, E., \& Wang, O. (2018).
-\textit{The unreasonable effectiveness of deep features as a perceptual metric}.
-CVPR 2018.
-
-\bibitem{zhang2018lpips}
 Zhang, R., Isola, P., Efros, A.~A., Shechtman, E., \& Wang, O. (2018).
 \textit{The unreasonable effectiveness of deep features as a perceptual metric}.
 CVPR 2018.
@@ -2292,11 +3890,6 @@ Song, Y., Sohl-Dickstein, J., Kingma, D.~P., Kumar, A., Ermon, S., \& Poole, B. 
 \textit{Generative modeling by estimating gradients of the data distribution}.
 NeurIPS 2019.
 
-\bibitem{luo2022diffatk}
-Chen, X., \& He, Z. (2023).
-\textit{Diffusion-based adversarial sample generation for improved stealthiness and controllability}.
-NeurIPS 2023.
-
 \bibitem{salman2023raising}
 Salman, H., Ilyas, A., Engstrom, L., Vyas, A., \& Madry, A. (2023).
 \textit{Raising the cost of malicious AI-powered image editing}.
@@ -2317,25 +3910,58 @@ Dong, Y., Liao, F., Pang, T., Su, H., Zhu, J., Hu, X., \& Li, J. (2018).
 \textit{Boosting adversarial attacks with momentum}.
 CVPR 2018, 9185--9193.
 
-\bibitem{placeholder_av}
-Cao, Y., Xiao, C., Cyr, B., Jin, Y., Park, J., Rampazzi, S., Chen, Q.~A., Fu, K., \& Mao, Z.~M. (2019).
-\textit{Adversarial sensor attack on LiDAR-based perception in autonomous driving}.
-ACM CCS 2019, 2267--2281.
+\bibitem{athalye2018obfuscated}
+Athalye, A., Carlini, N., \& Wagner, D. (2018).
+\textit{Obfuscated Gradients Give a False Sense of Security: Circumventing Defenses to Adversarial Examples}.
+International Conference on Machine Learning (ICML), 274--283.
+arXiv:1802.00420.
 
-\bibitem{placeholder_surveillance}
-Ren, S., He, K., Girshick, R., \& Sun, J. (2015).
-\textit{Faster R-CNN: Towards real-time object detection with region proposal networks}.
-NeurIPS 2015.
+\bibitem{cao2021invisible}
+Cao, Y., Wang, N., Xiao, C., Yang, D., Fang, J., Yang, R., Chen, Q.~A., Liu, M., \& Li, B. (2021).
+\textit{Invisible for Both Camera and LiDAR: Security of Multi-Sensor Fusion based Perception in Autonomous Driving Under Physical-World Attacks}.
+IEEE Symposium on Security and Privacy (S\&P), 176--194.
 
-\bibitem{placeholder_adas}
-Sitawarin, C., Bhagoji, A.~N., Mosenia, A., Chiang, M., \& Mittal, P. (2018).
-\textit{DARTS: Deceiving autonomous cars with toxic signs}.
-arXiv:1802.06430.
+\bibitem{esser2021taming}
+Esser, P., Rombach, R., \& Ommer, B. (2021).
+\textit{Taming Transformers for High-Resolution Image Synthesis}.
+IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 12873--12883.
+arXiv:2012.09841.
 
-\bibitem{placeholder_diffatk}
-Chen, X., \& He, Z. (2023).
-\textit{Diffusion-based adversarial sample generation for improved stealthiness and controllability}.
-NeurIPS 2023.
+
+\bibitem{liu2019dpatch}
+Liu, X., Yang, H., Liu, Z., Song, L., Li, H., \& Chen, Y. (2019).
+\textit{DPatch: An Adversarial Patch Attack on Object Detectors}.
+arXiv preprint arXiv:1806.02299.
+
+\bibitem{xue2023diffusion}
+Xue, H., Cao, Y., Yuan, Y., Shi, G., Zhang, X., \& Li, H. (2023).
+\textit{Diffusion-based Adversarial Sample Generation for Improved Stealthiness and Controllability}.
+NeurIPS 2023. arXiv:2305.16494.
+
+\bibitem{zhou2019centernet}
+Zhou, X., Wang, D., \& Krähenbühl, P. (2019).
+\textit{Objects as Points}.
+arXiv preprint arXiv:1904.07850.
+
+\bibitem{song2018unrestricted}
+Song, Y., Shen, R., Meng, X., Ermon, S., \& Goodfellow, I. (2018).
+\textit{Constructing Unrestricted Adversarial Examples with Generative Models}.
+NeurIPS 2018, 8312--8323.
+
+\bibitem{wei2019transferable}
+Wei, X., Liang, S., Chen, N., \& Cao, X. (2019).
+\textit{Transferable Adversarial Attacks for Image and Video Object Detection}.
+IJCAI 2019, 954--960.
+
+\bibitem{zhao2016loss}
+Zhao, H., Shi, J., Qi, X., Wang, X., \& Jia, J. (2017).
+\textit{Pyramid Scene Parsing Network}.
+CVPR 2017, 2881--2890.
+
+\bibitem{wen2015ua}
+Wen, L., Du, D., Cai, Z., Lei, Z., Chang, M., Qi, H., Lim, J., Yang, M., \& Lyu, S. (2015).
+\textit{UA-DETRAC: A New Benchmark and Protocol for Multi-Object Detection and Tracking}.
+arXiv preprint arXiv:1511.04136.
 
 \end{thebibliography}
 

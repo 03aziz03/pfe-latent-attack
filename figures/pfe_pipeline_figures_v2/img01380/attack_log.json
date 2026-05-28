@@ -1,0 +1,87 @@
+{
+  "frame": "img01380.jpg",
+  "seed": 42,
+  "steps_taken": 80,
+  "config_attack": {
+    "eps_z": 0.5,
+    "gamma": 0.05,
+    "lambda_p": 0.001,
+    "lambda_r": 0.001,
+    "lr": 0.01,
+    "num_steps": 80,
+    "early_stop": true,
+    "early_stop_margin": 0.0,
+    "use_lpips": true,
+    "lpips_net": "alex",
+    "use_ssim": true,
+    "ssim_weight": 0.3,
+    "use_objectness": false,
+    "obj_weight": 0.5,
+    "use_momentum": false,
+    "momentum_decay": 0.9,
+    "n_restarts": 1,
+    "restart_noise": 0.5
+  },
+  "pixel_stats": {
+    "mean_R": 0.5157266855239868,
+    "std_R": 0.15635636448860168,
+    "mean_G": 0.5051127672195435,
+    "std_G": 0.14747558534145355,
+    "mean_B": 0.48476529121398926,
+    "std_B": 0.15396864712238312
+  },
+  "latent_stats": {
+    "ch0": {
+      "mean": 0.4489879608154297,
+      "std": 0.77010577917099,
+      "min": -1.9098045825958252,
+      "max": 5.985836505889893
+    },
+    "ch1": {
+      "mean": -0.15165609121322632,
+      "std": 0.8516290783882141,
+      "min": -2.7709875106811523,
+      "max": 6.217787265777588
+    },
+    "ch2": {
+      "mean": 0.1577889770269394,
+      "std": 0.6553975939750671,
+      "min": -5.847259521484375,
+      "max": 1.7993700504302979
+    },
+    "ch3": {
+      "mean": -0.006400250364094973,
+      "std": 0.621165931224823,
+      "min": -4.6950812339782715,
+      "max": 2.179595708847046
+    }
+  },
+  "mask_coverage": {
+    "coverage_M_pct": 14.00869369506836,
+    "coverage_Mz_pct": 14.963234901428223,
+    "extra_boundary_cells": 0
+  },
+  "vae_rec_metrics": {
+    "psnr_vae": 32.473021565619796,
+    "ssim_vae": 0.8903135946337505,
+    "max_pixel_err": 132.0,
+    "mean_pixel_err": 3.899510383605957
+  },
+  "detection": {
+    "n_clean": 4,
+    "n_adv": 6,
+    "dfr": 0.0,
+    "mean_conf_clean": 0.8965397030115128,
+    "mean_conf_adv": 0.3746885855992635
+  },
+  "final_metrics": {
+    "L_det_final": 0.12808065116405487,
+    "L_perc_final": 0.15674662590026855,
+    "L_reg_final": 0.0037645413540303707,
+    "L_total_final": 0.128241166472435,
+    "p_max_final": 0.42436307668685913,
+    "psnr_adv": 34.96619381172174,
+    "ssim_adv": 0.9784516749831008
+  },
+  "timestamp": "2026-05-23T15:35:53"
+}
