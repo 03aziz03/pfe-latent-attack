@@ -45,7 +45,7 @@ sys.path.insert(0, str(ROOT))
 from src.vae      import SDVAE
 from src.detector import YOLOv8Wrapper
 from src.masks    import boxes_to_pixel_mask, pixel_mask_to_latent_mask
-from src.data     import load_image_tensor
+from src.utils    import load_image as load_image_tensor
 
 
 # ════════════════════════════════════════════════════════════════════════════
