@@ -462,7 +462,7 @@ def main():
         print(f"[{i+1}/{len(img_paths)}] {img_name}")
 
         # ── load & letterbox ─────────────────────────────────────────
-        x = load_image_tensor(str(img_path), imgsz=args.imgsz, device=device)
+        x = load_image_tensor(str(img_path), imgsz=args.imgsz).to(device)
         _, _, H, W = x.shape
 
         # ── detect ───────────────────────────────────────────────────
