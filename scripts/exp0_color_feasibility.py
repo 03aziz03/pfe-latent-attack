@@ -108,6 +108,31 @@ TARGET_COLORS_RGB_DISPLAY = {
 }
 
 
+def paint_mask(x: torch.Tensor,
+               M_bbox: torch.Tensor,
+               L_min: float = 25.0,
+               L_max: float = 75.0) -> torch.Tensor:
+    """Refine a bounding-box mask to keep only 'car paint' pixels.
+
+    Excludes:
+      - Very dark pixels  (L < L_min): tires, deep shadows
+      - Very bright pixels (L > L_max): windows, headlights, specular reflections
+
+    Args:
+        x:      (1,3,H,W) image tensor in [0,1]
+        M_bbox: (1,1,H,W) full bounding-box mask
+        L_min:  luminance lower threshold (CIE LAB scale 0–100)
+        L_max:  luminance upper threshold
+
+    Returns:
+        (1,1,H,W) float mask — intersection of bbox and paint-luminance range
+    """
+    with torch.no_grad():
+        L = rgb_to_lab(x)[:, 0:1]          # luminance channel
+    paint = ((L > L_min) & (L < L_max)).float()
+    return M_bbox * paint
+
+
 def color_loss_lab(x_adv: torch.Tensor,
                    M: torch.Tensor,
                    ab_target: torch.Tensor) -> torch.Tensor:
@@ -156,23 +181,35 @@ def run_color_attack(
         lambda_s:  float = 2.0,
         lambda_bg: float = 10.0,
         lambda_r:  float = 1e-3,
+        L_min:     float = 25.0,
+        L_max:     float = 75.0,
         verbose:   bool  = True,
 ) -> tuple[torch.Tensor, dict]:
     """Gradient descent in latent space to change vehicle color.
 
     Loss:
-        L = L_color + lambda_s * L_struct + lambda_bg * L_bg + lambda_r * L_reg
+        L = L_color(M_paint) + lambda_s*L_struct(M_paint)
+          + lambda_bg*L_bg(M_bbox) + lambda_r*L_reg
+
+    The key improvement over a naive approach:
+      - M_paint = paint_mask(x, M, L_min, L_max)
+        → only 'car body' pixels (excludes tires, windows, lights)
+        → color and structure losses applied to paint pixels only
+      - M (full bbox) used only for paste-back and background loss
+        → background outside bbox stays unchanged
 
     Args:
         x:          (1,3,H,W) original image tensor
         z:          encoded latent (cached, no grad)
-        M:          (1,1,H,W) pixel mask
+        M:          (1,1,H,W) full bounding-box pixel mask
         Mz:         (1,4,H/8,W/8) latent mask
         ab_target:  (1,2) target LAB (a,b) values
-        eps_z:      L-inf budget on delta (use 1.0, larger than suppression)
+        eps_z:      L-inf budget on delta (use 1.0)
         lambda_s:   luminance preservation weight
-        lambda_bg:  background preservation weight (high = strict)
+        lambda_bg:  background preservation weight
         lambda_r:   latent regularization weight
+        L_min:      luminance lower bound for paint pixels (exclude tires/shadows)
+        L_max:      luminance upper bound for paint pixels (exclude windows/lights)
 
     Returns:
         x_adv:   (1,3,H,W) color-modified image
@@ -180,6 +217,16 @@ def run_color_attack(
     """
     device    = vae.device
     ab_target = ab_target.to(device)
+
+    # ── Paint mask: only car-body pixels (no tires, no windows, no lights) ──
+    M_paint = paint_mask(x, M, L_min=L_min, L_max=L_max)
+    paint_ratio = float(M_paint.sum() / (M.sum() + 1e-8))
+    if verbose:
+        print(f"  [paint_mask] paint pixels = {paint_ratio*100:.1f}% of bbox "
+              f"(L_min={L_min}, L_max={L_max})")
+    if paint_ratio < 0.05:
+        print("  [WARNING] paint mask is nearly empty — "
+              "try lowering L_min or raising L_max")
 
     delta = torch.zeros_like(z, requires_grad=True)
     optim = torch.optim.Adam([delta], lr=lr)
@@ -193,10 +240,12 @@ def run_color_attack(
     for step in range(num_steps):
         z_adv  = z + Mz * delta
         x_dec  = vae.decode(z_adv)
-        x_adv  = M * x_dec + (1 - M) * x                  # paste-back
+        x_adv  = M * x_dec + (1 - M) * x                  # paste-back (full bbox)
 
-        L_color  = color_loss_lab(x_adv, M, ab_target)
-        L_struct = structure_loss_lab(x_adv, x, M)
+        # Color + structure losses on PAINT pixels only (not windows/tires)
+        L_color  = color_loss_lab(x_adv, M_paint, ab_target)
+        L_struct = structure_loss_lab(x_adv, x, M_paint)
+        # Background loss on full bbox complement
         L_bg     = F.mse_loss(x_adv * (1 - M), x * (1 - M))
         L_reg    = delta.pow(2).mean()
 
@@ -407,6 +456,11 @@ def parse_args():
     p.add_argument("--lambda_bg",     default=10.0, type=float,
                    help="Background preservation (keep high)")
     p.add_argument("--lambda_r",      default=1e-3, type=float)
+    # ── paint mask ───────────────────────────────────────────────────
+    p.add_argument("--L_min",         default=25.0, type=float,
+                   help="Exclude pixels darker than L_min (tires, shadows). 0–100 scale.")
+    p.add_argument("--L_max",         default=75.0, type=float,
+                   help="Exclude pixels brighter than L_max (windows, lights). 0–100 scale.")
     # ── runtime ──────────────────────────────────────────────────────
     p.add_argument("--device",        default="cuda", type=str)
     p.add_argument("--imgsz",         default=640, type=int)
@@ -494,6 +548,8 @@ def main():
             lambda_s=args.lambda_s,
             lambda_bg=args.lambda_bg,
             lambda_r=args.lambda_r,
+            L_min=args.L_min,
+            L_max=args.L_max,
             verbose=True,
         )
 
